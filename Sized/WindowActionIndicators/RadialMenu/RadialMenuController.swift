@@ -13,7 +13,7 @@ final class RadialMenuController {
 
     func show(at origin: CGPoint, selectedSlot: RadialMenuSlot?, action: RadialMenuAction?, hasTargetWindow: Bool) {
         let style = settings.wheelStyle
-        let size = CGFloat(style.size + 80)
+        let size = RadialMenuView.canvasSize(for: style)
         let screen = ScreenUtility.screen(containing: origin)
         let center = style.lockToScreenCenter ? ScreenUtility.centerPoint(in: screen) : origin
         let frame = CGRect(x: center.x - size / 2, y: center.y - size / 2, width: size, height: size)
