@@ -30,15 +30,16 @@ struct RadialMenuView: View {
     }
     private var secondaryAccent: Color { Color(hex: style.secondaryColorHex) }
     private var canvasSize: CGFloat { Self.canvasSize(for: style) }
+    private var shouldShowWheelContent: Bool {
+        (style.isVisible || isPreview) && !(style.hideWhenNoSelection && selectedSlot == nil)
+    }
 
     var body: some View {
         ZStack {
-            if style.isVisible || isPreview {
+            if shouldShowWheelContent {
                 ring
-                    .opacity(style.hideWhenNoSelection && selectedSlot == nil && !isPreview ? 0 : 1)
+                centerBadge
             }
-
-            centerBadge
         }
         .frame(width: canvasSize, height: canvasSize)
         .scaleEffect(isShown ? 1 : 1.18)
@@ -115,24 +116,26 @@ struct RadialMenuView: View {
     }
 
     private var centerBadge: some View {
-        let badgeSize = max(CGFloat(44), ringSize - thickness * 2 - 6)
+        let badgeSize = min(max(CGFloat(style.centerSize), 28), canvasSize - 24)
+        let cornerRadius = min(CGFloat(style.centerCornerRadius), badgeSize / 2)
         let borderColor: Color = selectedSlot == .center ? accent : Color.secondary.opacity(0.25)
         let borderWidth: CGFloat = selectedSlot == .center ? 2 : 1
 
         return centerBadgeView(
             badgeSize: badgeSize,
+            cornerRadius: cornerRadius,
             borderColor: borderColor,
             borderWidth: borderWidth
         )
     }
 
-    private func centerBadgeView(badgeSize: CGFloat, borderColor: Color, borderWidth: CGFloat) -> some View {
+    private func centerBadgeView(badgeSize: CGFloat, cornerRadius: CGFloat, borderColor: Color, borderWidth: CGFloat) -> some View {
         ZStack {
-            Circle()
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(.thinMaterial)
                 .frame(width: badgeSize, height: badgeSize)
                 .overlay {
-                    Circle()
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                         .strokeBorder(borderColor, lineWidth: borderWidth)
                 }
 

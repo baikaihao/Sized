@@ -257,7 +257,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSAccessibilityUsageDescription = "Sized 需要辅助功能权限来读取并调整当前焦点窗口的位置和大小。";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSInputMonitoringUsageDescription = "Sized 需要输入监听权限来响应全局触发键和鼠标中键。";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -289,7 +288,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSAccessibilityUsageDescription = "Sized 需要辅助功能权限来读取并调整当前焦点窗口的位置和大小。";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSInputMonitoringUsageDescription = "Sized 需要输入监听权限来响应全局触发键和鼠标中键。";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

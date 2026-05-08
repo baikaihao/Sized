@@ -33,17 +33,17 @@ final class SizedManager: ObservableObject {
     private var triggerOrigin = CGPoint.zero
     private var selectedSlot: RadialMenuSlot?
     private var frontmostApplication: NSRunningApplication?
+    private var didStartEventTriggers = false
 
     private init() {}
 
     func start() {
-        InputMonitoringManager.shared.refresh()
-        if !InputMonitoringManager.shared.isTrusted {
-            InputMonitoringManager.shared.requestAccess()
+        AccessibilityManager.shared.refresh()
+        if !AccessibilityManager.shared.isTrusted {
+            AccessibilityManager.shared.startAutoRefresh()
         }
 
-        keybindTrigger.start()
-        middleClickTrigger.start()
+        startEventTriggers()
         StatusItemController.shared.applyVisibility(settings.general.showMenuBarIcon)
 
         settings.$general
@@ -52,14 +52,31 @@ final class SizedManager: ObservableObject {
                 NSApp.setActivationPolicy(general.hideDockIcon ? .accessory : .regular)
             }
             .store(in: &cancellables)
+
+        AccessibilityManager.shared.$isTrusted
+            .removeDuplicates()
+            .sink { [weak self] isTrusted in
+                guard isTrusted else { return }
+                self?.restartEventTriggers()
+            }
+            .store(in: &cancellables)
     }
 
     func stop() {
-        keybindTrigger.stop()
-        middleClickTrigger.stop()
+        stopEventTriggers()
         mouseObserver.stop()
         stopEscapeMonitor()
         indicatorService.hideAll()
+        AccessibilityManager.shared.stopAutoRefresh()
+    }
+
+    func refreshPermissions() {
+        AccessibilityManager.shared.refresh()
+        if AccessibilityManager.shared.isTrusted {
+            restartEventTriggers()
+        } else {
+            AccessibilityManager.shared.startAutoRefresh()
+        }
     }
 
     func openSettings() {
@@ -118,6 +135,24 @@ final class SizedManager: ObservableObject {
         HapticFeedback.selectionChanged(enabled: settings.behavior.hapticFeedback)
     }
 
+    private func startEventTriggers() {
+        guard !didStartEventTriggers else { return }
+        keybindTrigger.start()
+        middleClickTrigger.start()
+        didStartEventTriggers = true
+    }
+
+    private func stopEventTriggers() {
+        keybindTrigger.stop()
+        middleClickTrigger.stop()
+        didStartEventTriggers = false
+    }
+
+    private func restartEventTriggers() {
+        stopEventTriggers()
+        startEventTriggers()
+    }
+
     private func startEscapeMonitor() {
         stopEscapeMonitor()
 
@@ -137,7 +172,7 @@ final class SizedManager: ObservableObject {
         escapeMonitor = monitor
         if !monitor.start() {
             escapeMonitor = nil
-            InputMonitoringManager.shared.requestAccess()
+            AccessibilityManager.shared.requestAccess()
         }
     }
 
@@ -161,7 +196,7 @@ extension SizedManager: KeybindTriggerDelegate {
     }
 
     func triggerMonitorDidFailToStart() {
-        InputMonitoringManager.shared.requestAccess()
+        AccessibilityManager.shared.requestAccess()
     }
 }
 
@@ -175,7 +210,7 @@ extension SizedManager: MiddleClickTriggerDelegate {
     }
 
     func middleClickMonitorDidFailToStart() {
-        InputMonitoringManager.shared.requestAccess()
+        AccessibilityManager.shared.requestAccess()
     }
 }
 
