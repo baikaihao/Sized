@@ -86,7 +86,7 @@ struct WheelPreviewPanel: View {
                         isShown: true,
                         isPreview: true
                     )
-                    .frame(width: max(style.size + 96, 220), height: max(style.size + 96, 220))
+                    .frame(width: max(RadialMenuView.canvasSize(for: style) + 16, 220), height: max(RadialMenuView.canvasSize(for: style) + 16, 220))
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 240)

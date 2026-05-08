@@ -1,6 +1,12 @@
 import SwiftUI
 
 struct RadialMenuView: View {
+    static let contentPadding: CGFloat = 64
+
+    static func canvasSize(for style: WheelStyleSettings) -> CGFloat {
+        CGFloat(style.size) + contentPadding * 2
+    }
+
     var selectedSlot: RadialMenuSlot?
     var action: RadialMenuAction?
     var style: WheelStyleSettings
@@ -23,6 +29,7 @@ struct RadialMenuView: View {
         }
     }
     private var secondaryAccent: Color { Color(hex: style.secondaryColorHex) }
+    private var canvasSize: CGFloat { Self.canvasSize(for: style) }
 
     var body: some View {
         ZStack {
@@ -33,7 +40,7 @@ struct RadialMenuView: View {
 
             centerBadge
         }
-        .frame(width: ringSize + 80, height: ringSize + 80)
+        .frame(width: canvasSize, height: canvasSize)
         .scaleEffect(isShown ? 1 : 1.18)
         .opacity(isShown ? 1 : 0)
         .animation(style.appearanceAnimation ? .easeOut(duration: 0.12) : nil, value: isShown)
@@ -88,7 +95,7 @@ struct RadialMenuView: View {
                     .offset(labelOffset(for: slot))
             }
         }
-        .frame(width: ringSize + 80, height: ringSize + 80)
+        .frame(width: canvasSize, height: canvasSize)
     }
 
     @ViewBuilder
@@ -213,7 +220,7 @@ struct RadialMenuView: View {
     }
 
     private func labelOffset(for slot: RadialMenuSlot) -> CGSize {
-        let availableRadius = (ringSize + 80 - labelWidth) / 2
+        let availableRadius = (canvasSize - labelWidth) / 2
         let radius = min(ringSize / 2 + 18, max(ringSize / 2 - thickness / 2, availableRadius))
         let radians = slot.angleDegrees * .pi / 180
         return CGSize(width: cos(radians) * radius, height: -sin(radians) * radius)
