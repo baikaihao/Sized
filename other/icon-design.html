@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sized — Icon Design</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: #0d0d1a;
+    color: #e0e0e0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px;
+  }
+
+  h1 {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #60A5FA, #3B82F6, #8B5CF6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 80px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .section {
+    margin-bottom: 100px;
+    text-align: center;
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  .section-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  .section-desc {
+    font-size: 15px;
+    color: #555;
+    margin-bottom: 48px;
+    font-weight: 400;
+  }
+
+  .icon-showcase {
+    display: flex;
+    gap: 40px;
+    align-items: stretch;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .icon-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    flex: 1;
+    max-width: 340px;
+    min-width: 280px;
+  }
+
+  .icon-card .label {
+    font-size: 14px;
+    color: #888;
+    font-weight: 500;
+  }
+
+  .icon-card .desc {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.6;
+    text-align: center;
+    padding: 0 10px;
+  }
+
+  .icon-frame {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 28px;
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset;
+    backdrop-filter: blur(20px);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .icon-frame::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  }
+
+  .icon-frame:hover {
+    border-color: rgba(255,255,255,0.15);
+    box-shadow: 0 25px 70px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1) inset;
+    transform: translateY(-4px);
+  }
+
+  .menubar-showcase {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .menubar-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .menubar-bar {
+    background: rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 240px;
+    height: 40px;
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+  }
+
+  .menubar-bar .time {
+    font-size: 13px;
+    font-weight: 600;
+    color: #aaa;
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dark-bg {
+    background: #1a1a1a;
+    border-color: rgba(255,255,255,0.1);
+  }
+
+  .light-bg {
+    background: rgba(255,255,255,0.9);
+    border-color: rgba(0,0,0,0.1);
+  }
+
+  .light-bg .time {
+    color: #555;
+  }
+
+  .size-grid {
+    display: flex;
+    gap: 32px;
+    align-items: flex-end;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 24px;
+  }
+
+  .size-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .size-item .size-label {
+    font-size: 12px;
+    color: #444;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .divider {
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    margin: 0 auto 60px;
+  }
+
+  .color-palette {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 24px;
+  }
+
+  .color-swatch {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .color-swatch:hover {
+    transform: scale(1.1);
+    border-color: rgba(255,255,255,0.3);
+  }
+
+  .color-swatch .hex {
+    font-size: 8px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 600;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+
+<h1>Sized</h1>
+<p class="subtitle">Icon Design System</p>
+
+<!-- ===== Section 1: App Icon ===== -->
+<div class="section">
+  <div class="section-title">App Icon</div>
+  <div class="section-desc">macOS 风格 · 三种全新设计方向</div>
+
+  <div class="icon-showcase">
+    <!-- Design 1: Two Windows - Small to Large (enlarged, no arrow) -->
+    <div class="icon-card">
+      <div class="icon-frame">
+        <svg width="280" height="280" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#18181b"/>
+              <stop offset="100%" stop-color="#09090b"/>
+            </linearGradient>
+            <radialGradient id="glow1" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="shadow1a" x="-15%" y="-15%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="rgba(139,92,246,0.4)"/>
+            </filter>
+            <filter id="shadow1b" x="-15%" y="-15%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="5" stdDeviation="10" flood-color="rgba(139,92,246,0.2)"/>
+            </filter>
+            <clipPath id="clip1">
+              <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224"/>
+            </clipPath>
+          </defs>
+
+          <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bg1)"/>
+          <circle cx="512" cy="512" r="500" fill="url(#glow1)" clip-path="url(#clip1)"/>
+
+          <!-- Small window (background) -->
+          <g filter="url(#shadow1b)" opacity="0.4">
+            <rect x="90" y="150" width="480" height="380" rx="22" ry="22" fill="#27272a" stroke="rgba(255,255,255,0.1)" stroke-width="3"/>
+            <rect x="90" y="150" width="480" height="52" rx="22" ry="22" fill="#3f3f46"/>
+            <rect x="90" y="176" width="480" height="26" fill="#3f3f46"/>
+            <circle cx="128" cy="176" r="7" fill="#FF6058"/>
+            <circle cx="152" cy="176" r="7" fill="#FFBD2E"/>
+            <circle cx="176" cy="176" r="7" fill="#28CA42"/>
+          </g>
+
+          <!-- Large window (foreground) -->
+          <g filter="url(#shadow1a)">
+            <rect x="215" y="255" width="610" height="515" rx="26" ry="26" fill="#27272a" stroke="rgba(255,255,255,0.2)" stroke-width="3.5"/>
+            <rect x="215" y="255" width="610" height="56" rx="26" ry="26" fill="#3f3f46"/>
+            <rect x="215" y="283" width="610" height="28" fill="#3f3f46"/>
+            <circle cx="257" cy="283" r="8" fill="#FF6058"/>
+            <circle cx="283" cy="283" r="8" fill="#FFBD2E"/>
+            <circle cx="309" cy="283" r="8" fill="#28CA42"/>
+            <rect x="265" y="355" width="340" height="14" rx="7" fill="rgba(255,255,255,0.08)"/>
+            <rect x="265" y="389" width="240" height="14" rx="7" fill="rgba(255,255,255,0.05)"/>
+            <rect x="265" y="433" width="510" height="287" rx="14" ry="14" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
+          </g>
+
+          <!-- Resize handles on big window corners -->
+          <g opacity="0.85">
+            <rect x="139" y="219" width="52" height="12" rx="6" fill="#8B5CF6"/>
+            <rect x="179" y="179" width="12" height="52" rx="6" fill="#8B5CF6"/>
+            <rect x="849" y="219" width="52" height="12" rx="6" fill="#8B5CF6"/>
+            <rect x="849" y="179" width="12" height="52" rx="6" fill="#8B5CF6"/>
+            <rect x="139" y="794" width="52" height="12" rx="6" fill="#8B5CF6"/>
+            <rect x="179" y="794" width="12" height="52" rx="6" fill="#8B5CF6"/>
+            <rect x="849" y="794" width="52" height="12" rx="6" fill="#8B5CF6"/>
+            <rect x="849" y="794" width="12" height="52" rx="6" fill="#8B5CF6"/>
+          </g>
+        </svg>
+      </div>
+      <span class="label">最终方案 — 小窗变大窗</span>
+      <span class="desc">两个窗口叠放，小窗口 → 大窗口<br>直观表达「窗口缩放」功能</span>
+    </div>
+
+    <!-- Design 2: Window with Double-headed Arrows -->
+    <div class="icon-card">
+      <div class="icon-frame">
+        <svg width="256" height="256" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#18181b"/>
+              <stop offset="100%" stop-color="#09090b"/>
+            </linearGradient>
+            <radialGradient id="glow2" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.12"/>
+              <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="shadow2" x="-15%" y="-15%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="6" stdDeviation="14" flood-color="rgba(139,92,246,0.3)"/>
+            </filter>
+            <clipPath id="clip2">
+              <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224"/>
+            </clipPath>
+          </defs>
+
+          <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bg2)"/>
+          <circle cx="512" cy="512" r="450" fill="url(#glow2)" clip-path="url(#clip2)"/>
+
+          <!-- Main window -->
+          <g filter="url(#shadow2)">
+            <rect x="260" y="280" width="504" height="420" rx="22" ry="22" fill="#27272a" stroke="rgba(255,255,255,0.16)" stroke-width="3"/>
+            <rect x="260" y="280" width="504" height="48" rx="22" ry="22" fill="#3f3f46"/>
+            <rect x="260" y="304" width="504" height="24" fill="#3f3f46"/>
+            <circle cx="298" cy="304" r="6.5" fill="#FF6058"/>
+            <circle cx="320" cy="304" r="6.5" fill="#FFBD2E"/>
+            <circle cx="342" cy="304" r="6.5" fill="#28CA42"/>
+
+            <rect x="310" y="370" width="260" height="10" rx="5" fill="rgba(255,255,255,0.08)"/>
+            <rect x="310" y="395" width="180" height="10" rx="5" fill="rgba(255,255,255,0.05)"/>
+            <rect x="310" y="430" width="404" height="220" rx="10" ry="10" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
+          </g>
+
+          <!-- Double-headed horizontal arrows -->
+          <g opacity="0.85">
+            <!-- Left arrow -->
+            <line x1="170" y1="490" x2="240" y2="490" stroke="#A78BFA" stroke-width="5" stroke-linecap="round"/>
+            <path d="M182 478 L168 490 L182 502" fill="none" stroke="#A78BFA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Right arrow -->
+            <line x1="784" y1="490" x2="854" y2="490" stroke="#A78BFA" stroke-width="5" stroke-linecap="round"/>
+            <path d="M842 478 L856 490 L842 502" fill="none" stroke="#A78BFA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+
+          <!-- Double-headed vertical arrows -->
+          <g opacity="0.85">
+            <!-- Top arrow -->
+            <line x1="512" y1="190" x2="512" y2="258" stroke="#A78BFA" stroke-width="5" stroke-linecap="round"/>
+            <path d="M500 202 L512 188 L524 202" fill="none" stroke="#A78BFA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Bottom arrow -->
+            <line x1="512" y1="722" x2="512" y2="790" stroke="#A78BFA" stroke-width="5" stroke-linecap="round"/>
+            <path d="M500 778 L512 792 L524 778" fill="none" stroke="#A78BFA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+
+          <!-- Resize handles on corners -->
+          <g opacity="0.8">
+            <rect x="236" y="260" width="44" height="10" rx="5" fill="#8B5CF6"/>
+            <rect x="236" y="260" width="10" height="44" rx="5" fill="#8B5CF6"/>
+            <rect x="740" y="260" width="44" height="10" rx="5" fill="#8B5CF6"/>
+            <rect x="774" y="260" width="10" height="44" rx="5" fill="#8B5CF6"/>
+            <rect x="236" y="686" width="44" height="10" rx="5" fill="#8B5CF6"/>
+            <rect x="236" y="652" width="10" height="44" rx="5" fill="#8B5CF6"/>
+            <rect x="740" y="686" width="44" height="10" rx="5" fill="#8B5CF6"/>
+            <rect x="774" y="652" width="10" height="44" rx="5" fill="#8B5CF6"/>
+          </g>
+        </svg>
+      </div>
+      <span class="label">方案 B — 四向缩放</span>
+      <span class="desc">窗口居中 + 四个方向的双向箭头<br>经典「缩放」视觉语言</span>
+    </div>
+
+    <!-- Design 3: Corner Drag -->
+    <div class="icon-card">
+      <div class="icon-frame">
+        <svg width="256" height="256" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#18181b"/>
+              <stop offset="100%" stop-color="#09090b"/>
+            </linearGradient>
+            <radialGradient id="glow3" cx="30%" cy="30%" r="50%">
+              <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="shadow3" x="-15%" y="-15%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="6" stdDeviation="14" flood-color="rgba(139,92,246,0.3)"/>
+            </filter>
+            <filter id="glow3a" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="16"/>
+            </filter>
+            <clipPath id="clip3">
+              <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224"/>
+            </clipPath>
+          </defs>
+
+          <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bg3)"/>
+          <circle cx="300" cy="300" r="500" fill="url(#glow3)" clip-path="url(#clip3)"/>
+
+          <!-- Window body -->
+          <g filter="url(#shadow3)">
+            <rect x="240" y="300" width="544" height="440" rx="22" ry="22" fill="#27272a" stroke="rgba(255,255,255,0.16)" stroke-width="3"/>
+            <rect x="240" y="300" width="544" height="48" rx="22" ry="22" fill="#3f3f46"/>
+            <rect x="240" y="324" width="544" height="24" fill="#3f3f46"/>
+            <circle cx="278" cy="324" r="6.5" fill="#FF6058"/>
+            <circle cx="300" cy="324" r="6.5" fill="#FFBD2E"/>
+            <circle cx="322" cy="324" r="6.5" fill="#28CA42"/>
+
+            <rect x="290" y="390" width="280" height="12" rx="6" fill="rgba(255,255,255,0.08)"/>
+            <rect x="290" y="420" width="200" height="12" rx="6" fill="rgba(255,255,255,0.05)"/>
+            <rect x="290" y="460" width="444" height="230" rx="10" ry="10" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
+          </g>
+
+          <!-- Corner handle being dragged outward - bottom-right -->
+          <g>
+            <!-- Original corner position (ghost) -->
+            <rect x="760" y="716" width="24" height="24" rx="4" fill="none" stroke="rgba(139,92,246,0.3)" stroke-width="2" stroke-dasharray="6 4"/>
+
+            <!-- Drag trail -->
+            <line x1="772" y1="728" x2="840" y2="796" stroke="rgba(167,139,250,0.2)" stroke-width="3" stroke-linecap="round" stroke-dasharray="8 6"/>
+
+            <!-- Active corner handle (dragged) -->
+            <g filter="url(#glow3a)">
+              <rect x="820" y="776" width="52" height="12" rx="6" fill="#A78BFA"/>
+              <rect x="860" y="776" width="12" height="52" rx="6" fill="#A78BFA"/>
+            </g>
+            <rect x="820" y="776" width="52" height="12" rx="6" fill="#8B5CF6"/>
+            <rect x="860" y="776" width="12" height="52" rx="6" fill="#8B5CF6"/>
+
+            <!-- Cursor arrow at the corner -->
+            <g transform="translate(875, 820) rotate(-45)">
+              <path d="M0 -18 L5 -4 L0 -6 L-5 -4 Z" fill="#A78BFA"/>
+              <line x1="0" y1="-6" x2="0" y2="12" stroke="#A78BFA" stroke-width="3" stroke-linecap="round"/>
+            </g>
+          </g>
+
+          <!-- Other corner handles (static) -->
+          <g opacity="0.5">
+            <rect x="216" y="280" width="40" height="10" rx="5" fill="#8B5CF6"/>
+            <rect x="216" y="280" width="10" height="40" rx="5" fill="#8B5CF6"/>
+            <rect x="760" y="280" width="40" height="10" rx="5" fill="#8B5CF6"/>
+            <rect x="790" y="280" width="10" height="40" rx="5" fill="#8B5CF6"/>
+            <rect x="216" y="726" width="40" height="10" rx="5" fill="#8B5CF6"/>
+            <rect x="216" y="696" width="10" height="40" rx="5" fill="#8B5CF6"/>
+          </g>
+        </svg>
+      </div>
+      <span class="label">方案 C — 拖拽角落</span>
+      <span class="desc">窗口右下角被拖拽拉伸，带拖拽轨迹<br>直接展示「拖拽缩放窗口」操作</span>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== Section 2: Multi-size preview ===== -->
+<div class="section">
+  <div class="section-title">多尺寸预览</div>
+  <div class="section-desc">最终方案在不同尺寸下的显示效果</div>
+
+  <div class="size-grid">
+    <div class="size-item">
+      <svg width="32" height="32" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="bs" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#18181b"/><stop offset="100%" stop-color="#09090b"/></linearGradient><radialGradient id="gs" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.18"/><stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/></radialGradient></defs>
+        <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bs)"/>
+        <circle cx="512" cy="512" r="500" fill="url(#gs)"/>
+        <rect x="120" y="180" width="480" height="380" rx="22" ry="22" fill="#27272a" stroke="rgba(255,255,255,0.1)" stroke-width="3" opacity="0.4"/>
+        <rect x="260" y="300" width="640" height="540" rx="26" ry="26" fill="#27272a" stroke="rgba(255,255,255,0.2)" stroke-width="4"/>
+        <rect x="260" y="300" width="640" height="56" rx="26" ry="26" fill="#3f3f46"/>
+        <rect x="260" y="328" width="640" height="28" fill="#3f3f46"/>
+        <circle cx="302" cy="328" r="8" fill="#FF6058"/>
+        <circle cx="328" cy="328" r="8" fill="#FFBD2E"/>
+        <circle cx="354" cy="328" r="8" fill="#28CA42"/>
+      </svg>
+      <span class="size-label">32px</span>
+    </div>
+
+    <div class="size-item">
+      <svg width="64" height="64" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="bm" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#18181b"/><stop offset="100%" stop-color="#09090b"/></linearGradient><radialGradient id="gm" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.18"/><stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/></radialGradient></defs>
+        <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bm)"/>
+        <circle cx="512" cy="512" r="500" fill="url(#gm)"/>
+        <rect x="120" y="180" width="480" height="380" rx="22" ry="22" fill="#27272a" stroke="rgba(255,255,255,0.1)" stroke-width="3" opacity="0.4"/>
+        <circle cx="158" cy="206" r="7" fill="#FF6058"/>
+        <circle cx="182" cy="206" r="7" fill="#FFBD2E"/>
+        <circle cx="206" cy="206" r="7" fill="#28CA42"/>
+        <rect x="260" y="300" width="640" height="540" rx="26" ry="26" fill="#27272a" stroke="rgba(255,255,255,0.2)" stroke-width="3.5"/>
+        <rect x="260" y="300" width="640" height="56" rx="26" ry="26" fill="#3f3f46"/>
+        <rect x="260" y="328" width="640" height="28" fill="#3f3f46"/>
+        <circle cx="302" cy="328" r="8" fill="#FF6058"/>
+        <circle cx="328" cy="328" r="8" fill="#FFBD2E"/>
+        <circle cx="354" cy="328" r="8" fill="#28CA42"/>
+        <rect x="310" y="400" width="340" height="14" rx="7" fill="rgba(255,255,255,0.08)"/>
+        <rect x="310" y="434" width="240" height="14" rx="7" fill="rgba(255,255,255,0.05)"/>
+        <rect x="310" y="478" width="540" height="300" rx="14" ry="14" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
+        <g opacity="0.85">
+          <rect x="232" y="276" width="52" height="12" rx="6" fill="#8B5CF6"/>
+          <rect x="232" y="276" width="12" height="52" rx="6" fill="#8B5CF6"/>
+          <rect x="876" y="276" width="52" height="12" rx="6" fill="#8B5CF6"/>
+          <rect x="916" y="276" width="12" height="52" rx="6" fill="#8B5CF6"/>
+          <rect x="232" y="828" width="52" height="12" rx="6" fill="#8B5CF6"/>
+          <rect x="232" y="788" width="12" height="52" rx="6" fill="#8B5CF6"/>
+          <rect x="876" y="828" width="52" height="12" rx="6" fill="#8B5CF6"/>
+          <rect x="916" y="788" width="12" height="52" rx="6" fill="#8B5CF6"/>
+        </g>
+      </svg>
+      <span class="size-label">64px</span>
+    </div>
+
+    <div class="size-item">
+      <svg width="128" height="128" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bl" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#18181b"/><stop offset="100%" stop-color="#09090b"/></linearGradient>
+          <radialGradient id="gl" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.18"/><stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/></radialGradient>
+          <filter id="sl" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="rgba(139,92,246,0.4)"/></filter>
+          <filter id="slb" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="5" stdDeviation="10" flood-color="rgba(139,92,246,0.2)"/></filter>
+        </defs>
+        <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bl)"/>
+        <circle cx="512" cy="512" r="500" fill="url(#gl)"/>
+        <g filter="url(#slb)" opacity="0.4">
+          <rect x="120" y="180" width="480" height="380" rx="22" ry="22" fill="#27272a" stroke="rgba(255,255,255,0.1)" stroke-width="3"/>
+          <rect x="120" y="180" width="480" height="52" rx="22" ry="22" fill="#3f3f46"/>
+          <rect x="120" y="206" width="480" height="26" fill="#3f3f46"/>
+          <circle cx="158" cy="206" r="7" fill="#FF6058"/>
+          <circle cx="182" cy="206" r="7" fill="#FFBD2E"/>
+          <circle cx="206" cy="206" r="7" fill="#28CA42"/>
+        </g>
+        <g filter="url(#sl)">
+          <rect x="260" y="300" width="640" height="540" rx="26" ry="26" fill="#27272a" stroke="rgba(255,255,255,0.2)" stroke-width="3.5"/>
+          <rect x="260" y="300" width="640" height="56" rx="26" ry="26" fill="#3f3f46"/>
+          <rect x="260" y="328" width="640" height="28" fill="#3f3f46"/>
+          <circle cx="302" cy="328" r="8" fill="#FF6058"/>
+          <circle cx="328" cy="328" r="8" fill="#FFBD2E"/>
+          <circle cx="354" cy="328" r="8" fill="#28CA42"/>
+          <rect x="310" y="400" width="340" height="14" rx="7" fill="rgba(255,255,255,0.08)"/>
+          <rect x="310" y="434" width="240" height="14" rx="7" fill="rgba(255,255,255,0.05)"/>
+          <rect x="310" y="478" width="540" height="300" rx="14" ry="14" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
+        </g>
+        <g opacity="0.85">
+          <rect x="232" y="276" width="52" height="12" rx="6" fill="#8B5CF6"/>
+          <rect x="232" y="276" width="12" height="52" rx="6" fill="#8B5CF6"/>
+          <rect x="876" y="276" width="52" height="12" rx="6" fill="#8B5CF6"/>
+          <rect x="916" y="276" width="12" height="52" rx="6" fill="#8B5CF6"/>
+          <rect x="232" y="828" width="52" height="12" rx="6" fill="#8B5CF6"/>
+          <rect x="232" y="788" width="12" height="52" rx="6" fill="#8B5CF6"/>
+          <rect x="876" y="828" width="52" height="12" rx="6" fill="#8B5CF6"/>
+          <rect x="916" y="788" width="12" height="52" rx="6" fill="#8B5CF6"/>
+        </g>
+      </svg>
+      <span class="size-label">128px</span>
+    </div>
+
+    <div class="size-item">
+      <svg width="256" height="256" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bxl" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#18181b"/><stop offset="100%" stop-color="#09090b"/></linearGradient>
+          <radialGradient id="gxl" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.18"/><stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/></radialGradient>
+          <filter id="sxl" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="rgba(139,92,246,0.4)"/></filter>
+          <filter id="sxlb" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="5" stdDeviation="10" flood-color="rgba(139,92,246,0.2)"/></filter>
+        </defs>
+        <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bxl)"/>
+        <circle cx="512" cy="512" r="500" fill="url(#gxl)"/>
+        <g filter="url(#sxlb)" opacity="0.4">
+          <rect x="120" y="180" width="480" height="380" rx="22" ry="22" fill="#27272a" stroke="rgba(255,255,255,0.1)" stroke-width="3"/>
+          <rect x="120" y="180" width="480" height="52" rx="22" ry="22" fill="#3f3f46"/>
+          <rect x="120" y="206" width="480" height="26" fill="#3f3f46"/>
+          <circle cx="158" cy="206" r="7" fill="#FF6058"/>
+          <circle cx="182" cy="206" r="7" fill="#FFBD2E"/>
+          <circle cx="206" cy="206" r="7" fill="#28CA42"/>
+        </g>
+        <g filter="url(#sxl)">
+          <rect x="260" y="300" width="640" height="540" rx="26" ry="26" fill="#27272a" stroke="rgba(255,255,255,0.2)" stroke-width="3.5"/>
+          <rect x="260" y="300" width="640" height="56" rx="26" ry="26" fill="#3f3f46"/>
+          <rect x="260" y="328" width="640" height="28" fill="#3f3f46"/>
+          <circle cx="302" cy="328" r="8" fill="#FF6058"/>
+          <circle cx="328" cy="328" r="8" fill="#FFBD2E"/>
+          <circle cx="354" cy="328" r="8" fill="#28CA42"/>
+          <rect x="310" y="400" width="340" height="14" rx="7" fill="rgba(255,255,255,0.08)"/>
+          <rect x="310" y="434" width="240" height="14" rx="7" fill="rgba(255,255,255,0.05)"/>
+          <rect x="310" y="478" width="540" height="300" rx="14" ry="14" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
+        </g>
+        <g opacity="0.85">
+          <rect x="184" y="264" width="52" height="12" rx="6" fill="#8B5CF6"/>
+          <rect x="224" y="224" width="12" height="52" rx="6" fill="#8B5CF6"/>
+          <rect x="924" y="264" width="52" height="12" rx="6" fill="#8B5CF6"/>
+          <rect x="924" y="224" width="12" height="52" rx="6" fill="#8B5CF6"/>
+          <rect x="184" y="864" width="52" height="12" rx="6" fill="#8B5CF6"/>
+          <rect x="224" y="864" width="12" height="52" rx="6" fill="#8B5CF6"/>
+          <rect x="924" y="864" width="52" height="12" rx="6" fill="#8B5CF6"/>
+          <rect x="924" y="864" width="12" height="52" rx="6" fill="#8B5CF6"/>
+        </g>
+      </svg>
+      <span class="size-label">256px</span>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== Section 3: Menu Bar Icons ===== -->
+<div class="section">
+  <div class="section-title">菜单栏图标</div>
+  <div class="section-desc">保留方案 A · Template 风格 · 适配明暗模式</div>
+
+  <div class="menubar-showcase">
+    <!-- Current preview -->
+    <div class="menubar-card">
+      <div class="menubar-bar">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="4" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="3" y1="7" x2="15" y2="7" stroke="currentColor" stroke-width="1"/>
+          <circle cx="5" cy="5.5" r="0.7" fill="currentColor"/>
+          <circle cx="7.5" cy="5.5" r="0.7" fill="currentColor"/>
+          <path d="M1 1L3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M1 1L1 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M1 1L3.5 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M17 17L14.5 14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M17 17L17 14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M17 17L14.5 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span class="time">12:00</span>
+      </div>
+      <span class="label">默认模式</span>
+    </div>
+
+    <!-- Dark mode -->
+    <div class="menubar-card">
+      <div class="menubar-bar dark-bg" style="color: #fff;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="4" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="3" y1="7" x2="15" y2="7" stroke="currentColor" stroke-width="1"/>
+          <circle cx="5" cy="5.5" r="0.7" fill="currentColor"/>
+          <circle cx="7.5" cy="5.5" r="0.7" fill="currentColor"/>
+          <path d="M1 1L3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M1 1L1 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M1 1L3.5 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M17 17L14.5 14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M17 17L17 14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M17 17L14.5 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span class="time">12:00</span>
+      </div>
+      <span class="label">深色模式</span>
+    </div>
+
+    <!-- Light mode -->
+    <div class="menubar-card">
+      <div class="menubar-bar light-bg" style="color: #1d1d1f;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="4" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="3" y1="7" x2="15" y2="7" stroke="currentColor" stroke-width="1"/>
+          <circle cx="5" cy="5.5" r="0.7" fill="currentColor"/>
+          <circle cx="7.5" cy="5.5" r="0.7" fill="currentColor"/>
+          <path d="M1 1L3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M1 1L1 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M1 1L3.5 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M17 17L14.5 14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M17 17L17 14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M17 17L14.5 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span class="time">12:00</span>
+      </div>
+      <span class="label">浅色模式</span>
+    </div>
+  </div>
+
+  <!-- Menu bar icon enlarged -->
+  <div style="margin-top: 48px;">
+    <div class="icon-frame" style="display: inline-flex; padding: 28px 36px;">
+      <svg width="64" height="64" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="4" width="12" height="10" rx="2" stroke="white" stroke-width="1.5"/>
+        <line x1="3" y1="7" x2="15" y2="7" stroke="white" stroke-width="1"/>
+        <circle cx="5" cy="5.5" r="0.7" fill="white"/>
+        <circle cx="7.5" cy="5.5" r="0.7" fill="white"/>
+        <path d="M1 1L3.5 3.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M1 1L1 3.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M1 1L3.5 1" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M17 17L14.5 14.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M17 17L17 14.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M17 17L14.5 17" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div style="margin-top: 12px; font-size: 13px; color: #666;">菜单栏图标 · 放大预览</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== Section 4: Color Palette ===== -->
+<div class="section">
+  <div class="section-title">配色方案</div>
+  <div class="section-desc">暗色背景 + 紫色系强调色</div>
+
+  <div class="color-palette">
+    <div class="color-swatch" style="background: #09090b;">
+      <span class="hex">#09090b</span>
+    </div>
+    <div class="color-swatch" style="background: #18181b;">
+      <span class="hex">#18181b</span>
+    </div>
+    <div class="color-swatch" style="background: #27272a;">
+      <span class="hex">#27272a</span>
+    </div>
+    <div class="color-swatch" style="background: #3f3f46;">
+      <span class="hex">#3f3f46</span>
+    </div>
+    <div class="color-swatch" style="background: #8B5CF6;">
+      <span class="hex">#8B5CF6</span>
+    </div>
+    <div class="color-swatch" style="background: #A78BFA;">
+      <span class="hex">#A78BFA</span>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== Section 5: Export Info ===== -->
+<div class="section" style="margin-bottom: 0;">
+  <div class="section-title">导出说明</div>
+  <div style="text-align: left; max-width: 640px; margin: 0 auto; line-height: 2.2; font-size: 14px; color: #777;">
+    <p><strong style="color: #bbb;">App Icon：</strong>将选定方案的 SVG 在 Figma/Sketch 中打开，导出为 1024×1024 PNG，然后拖入 Xcode Asset Catalog 的 <code style="color: #60A5FA;">AppIcon</code>。</p>
+    <p><strong style="color: #bbb;">菜单栏图标：</strong>使用 Template 风格 SVG（单色），在 Xcode 中设置为 <code style="color: #60A5FA;">Template Image</code>，系统会自动适配明暗模式。</p>
+    <p><strong style="color: #bbb;">推荐流程：</strong>SVG → Figma 微调 → 导出 PNG/SVG → Xcode Asset Catalog</p>
+  </div>
+</div>
+
+</body>
+</html>

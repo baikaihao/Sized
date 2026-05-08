@@ -5,7 +5,7 @@ struct PreviewView: View {
 
     var body: some View {
         RoundedRectangle(cornerRadius: CGFloat(settings.previewCornerRadius), style: .continuous)
-            .fill(Color.accentColor.opacity(0.16))
+            .fill(Color(hex: settings.previewBackgroundColorHex).opacity(0.16))
             .overlay {
                 RoundedRectangle(cornerRadius: CGFloat(settings.previewCornerRadius), style: .continuous)
                     .strokeBorder(Color(hex: settings.previewBorderColorHex), lineWidth: CGFloat(settings.previewBorderWidth))

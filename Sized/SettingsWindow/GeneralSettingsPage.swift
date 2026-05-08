@@ -50,9 +50,8 @@ struct GeneralSettingsPage: View {
                         Spacer()
 
                         Button {
-                            if accessibility.isTrusted {
-                                accessibility.refresh()
-                            } else {
+                            accessibility.refresh()
+                            if !accessibility.isTrusted {
                                 accessibility.requestAccess()
                             }
                         } label: {
@@ -69,14 +68,26 @@ struct GeneralSettingsPage: View {
 
                 SettingsSection(title: "触发键", systemImage: "keyboard") {
                     HStack {
-                        Text("触发键")
+                        Text("快捷键")
                         Spacer()
                         TriggerRecorderButton(displayName: $settings.trigger.triggerKeyDisplayName)
                     }
+                    
+                    Toggle("使用 Option 键作为触发键", isOn: $settings.trigger.useOptionAsTrigger)
+                    
+                    if settings.trigger.useOptionAsTrigger {
+                        Picker("Option 位置", selection: $settings.trigger.optionSide) {
+                            ForEach(OptionSide.allCases) { side in
+                                Text(side.displayName).tag(side)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
+                    }
+                    
                     SliderRow(title: "触发延迟", value: $settings.trigger.triggerDelayMilliseconds, range: 0...500, step: 10, suffix: "ms")
                     Toggle("双击触发键激活轮盘", isOn: $settings.trigger.doubleTapTrigger)
                     Toggle("鼠标中键触发轮盘", isOn: $settings.trigger.middleClickTrigger)
-                    SliderRow(title: "触发键超时", value: $settings.trigger.timeoutSeconds, range: 1...10, step: 1, suffix: "s")
                 }
 
                 SettingsSection(title: "行为设置", systemImage: "cursorarrow.motionlines") {
@@ -85,13 +96,6 @@ struct GeneralSettingsPage: View {
                     PickerRow(title: "改尺寸锚点", selection: $settings.behavior.resizeAnchor)
                     Toggle("忽略全屏窗口", isOn: $settings.behavior.ignoreFullScreenWindows)
                     Toggle("触觉反馈", isOn: $settings.behavior.hapticFeedback)
-                }
-
-                SettingsSection(title: "预览窗口", systemImage: "rectangle.dashed") {
-                    Toggle("显示目标尺寸预览", isOn: $settings.behavior.showPreview)
-                    SliderRow(title: "预览内边距", value: $settings.behavior.previewPadding, range: 0...30, step: 1, suffix: "pt")
-                    SliderRow(title: "圆角半径", value: $settings.behavior.previewCornerRadius, range: 0...28, step: 1, suffix: "pt")
-                    SliderRow(title: "边框宽度", value: $settings.behavior.previewBorderWidth, range: 1...6, step: 1, suffix: "pt")
                 }
 
                 SettingsSection(title: "重置与支持", systemImage: "questionmark.circle") {
@@ -104,8 +108,8 @@ struct GeneralSettingsPage: View {
 
                         Spacer()
 
-                        Link(destination: URL(string: "mailto:support@example.com")!) {
-                            Label("反馈邮件", systemImage: "envelope")
+                        Link(destination: URL(string: "https://github.com/baikaihao/Sized/issues")!) {
+                            Label("GitHub Issue", systemImage: "ladybug")
                         }
                     }
                 }
@@ -128,19 +132,9 @@ struct GeneralSettingsPage: View {
 
     private var appIdentity: some View {
         VStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(.thinMaterial)
-                    .frame(width: 128, height: 128)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 28, style: .continuous)
-                            .strokeBorder(.quaternary)
-                    }
-
-                Image(systemName: "circle.grid.cross.fill")
-                    .font(.system(size: 62, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
-            }
+            Image(nsImage: NSApp.applicationIconImage ?? NSImage())
+                .resizable()
+                .frame(width: 128, height: 128)
 
             Text("Sized")
                 .font(.system(size: 32, weight: .semibold))
@@ -161,10 +155,10 @@ private struct TriggerRecorderButton: View {
         Button {
             isRecording.toggle()
             if isRecording {
-                displayName = "按下修饰键..."
+                displayName = "按下快捷键..."
             }
         } label: {
-            Label(displayName, systemImage: isRecording ? "record.circle" : "option")
+            Text(displayName)
                 .frame(minWidth: 150)
         }
         .keyboardShortcut(.space, modifiers: [])
@@ -176,47 +170,211 @@ private struct KeyCaptureView: NSViewRepresentable {
     @Binding var isRecording: Bool
     @Binding var displayName: String
 
+    func makeCoordinator() -> Coordinator {
+        Coordinator(isRecording: $isRecording, displayName: $displayName)
+    }
+
     func makeNSView(context: Context) -> CaptureNSView {
         let view = CaptureNSView()
-        view.onFlagsChanged = { flags in
-            guard isRecording else { return }
-            let value = TriggerKeyFormatter.displayName(for: flags)
-            if !value.isEmpty {
-                displayName = value
-                isRecording = false
-            }
-        }
+        view.delegate = context.coordinator
         return view
     }
 
     func updateNSView(_ nsView: CaptureNSView, context: Context) {
         if isRecording {
+            context.coordinator.resetModifiers()
             DispatchQueue.main.async {
                 nsView.window?.makeFirstResponder(nsView)
             }
         }
     }
 
+    final class Coordinator: NSObject, CaptureNSViewDelegate {
+        @Binding var isRecording: Bool
+        @Binding var displayName: String
+        private var currentModifiers: NSEvent.ModifierFlags = []
+
+        init(isRecording: Binding<Bool>, displayName: Binding<String>) {
+            _isRecording = isRecording
+            _displayName = displayName
+        }
+
+        func resetModifiers() {
+            currentModifiers = []
+        }
+
+        func flagsChanged(_ flags: NSEvent.ModifierFlags) {
+            guard isRecording else { return }
+            let modifiers = flags.intersection(.deviceIndependentFlagsMask)
+            currentModifiers = modifiers
+        }
+
+        func keyDown(_ event: NSEvent) {
+            guard isRecording else { return }
+            
+            if event.keyCode == 53 {
+                isRecording = false
+                return
+            }
+            
+            let value = TriggerKeyFormatter.displayName(for: currentModifiers, keyCode: event.keyCode)
+            if !value.isEmpty {
+                displayName = value
+                isRecording = false
+                currentModifiers = []
+            }
+        }
+    }
+
+    protocol CaptureNSViewDelegate: AnyObject {
+        func flagsChanged(_ flags: NSEvent.ModifierFlags)
+        func keyDown(_ event: NSEvent)
+    }
+
     final class CaptureNSView: NSView {
-        var onFlagsChanged: ((NSEvent.ModifierFlags) -> Void)?
+        weak var delegate: CaptureNSViewDelegate?
 
         override var acceptsFirstResponder: Bool { true }
 
         override func flagsChanged(with event: NSEvent) {
-            onFlagsChanged?(event.modifierFlags)
+            delegate?.flagsChanged(event.modifierFlags)
+        }
+
+        override func keyDown(with event: NSEvent) {
+            delegate?.keyDown(event)
         }
     }
 }
 
 private enum TriggerKeyFormatter {
-    static func displayName(for flags: NSEvent.ModifierFlags) -> String {
+    static func displayName(for flags: NSEvent.ModifierFlags, keyCode: UInt16? = nil) -> String {
         var parts: [String] = []
         if flags.contains(.control) { parts.append("⌃") }
         if flags.contains(.option) { parts.append("⌥") }
         if flags.contains(.shift) { parts.append("⇧") }
         if flags.contains(.command) { parts.append("⌘") }
         if flags.contains(.capsLock) { parts.append("⇪") }
+        
+        if let keyCode = keyCode, let keyName = keyName(for: keyCode) {
+            parts.append(keyName)
+        }
+        
         return parts.joined()
+    }
+    
+    private static func keyName(for keyCode: UInt16) -> String? {
+        switch keyCode {
+        case 0: return "A"
+        case 1: return "S"
+        case 2: return "D"
+        case 3: return "F"
+        case 4: return "H"
+        case 5: return "G"
+        case 6: return "Z"
+        case 7: return "X"
+        case 8: return "C"
+        case 9: return "V"
+        case 11: return "B"
+        case 12: return "Q"
+        case 13: return "W"
+        case 14: return "E"
+        case 15: return "R"
+        case 16: return "Y"
+        case 17: return "T"
+        case 18: return "1"
+        case 19: return "2"
+        case 20: return "3"
+        case 21: return "4"
+        case 22: return "6"
+        case 23: return "5"
+        case 24: return "="
+        case 25: return "9"
+        case 26: return "7"
+        case 27: return "-"
+        case 28: return "8"
+        case 29: return "0"
+        case 30: return "]"
+        case 31: return "O"
+        case 32: return "U"
+        case 33: return "["
+        case 34: return "I"
+        case 35: return "P"
+        case 36: return "Return"
+        case 37: return "L"
+        case 38: return "J"
+        case 39: return "'"
+        case 40: return "K"
+        case 41: return ";"
+        case 42: return "\\"
+        case 43: return ","
+        case 44: return "/"
+        case 45: return "N"
+        case 46: return "M"
+        case 47: return "."
+        case 48: return "Tab"
+        case 49: return "Space"
+        case 50: return "`"
+        case 51: return "Delete"
+        case 53: return "Escape"
+        case 54: return "Right Command"
+        case 55: return "Command"
+        case 56: return "Shift"
+        case 57: return "Caps Lock"
+        case 58: return "Option"
+        case 59: return "Control"
+        case 60: return "Right Shift"
+        case 61: return "Right Option"
+        case 62: return "Right Control"
+        case 63: return "Function"
+        case 64: return "F17"
+        case 65: return "."
+        case 67: return "*"
+        case 69: return "+"
+        case 71: return "Clear"
+        case 72: return "F18"
+        case 73: return "F19"
+        case 75: return "/"
+        case 76: return "Enter"
+        case 78: return "-"
+        case 79: return "F20"
+        case 80: return "F22"
+        case 82: return "F21"
+        case 83: return "1"
+        case 84: return "2"
+        case 85: return "3"
+        case 86: return "4"
+        case 87: return "5"
+        case 88: return "6"
+        case 89: return "7"
+        case 91: return "8"
+        case 92: return "9"
+        case 93: return "0"
+        case 96: return "F5"
+        case 97: return "F6"
+        case 98: return "F7"
+        case 99: return "F3"
+        case 100: return "F8"
+        case 101: return "F9"
+        case 103: return "F11"
+        case 105: return "F13"
+        case 107: return "F14"
+        case 109: return "F10"
+        case 111: return "F12"
+        case 113: return "F15"
+        case 115: return "Home"
+        case 116: return "Page Up"
+        case 117: return "Forward Delete"
+        case 118: return "F4"
+        case 119: return "End"
+        case 120: return "F2"
+        case 121: return "Page Down"
+        case 122: return "F1"
+        case 123: return "Left"
+        case 124: return "Right"
+        case 125: return "Down"
+        case 126: return "Up"
+        default: return nil
+        }
     }
 }
 

@@ -51,11 +51,6 @@ struct WheelStylePage: View {
                             .onChange(of: secondaryColor) { _, newValue in
                                 settings.wheelStyle.secondaryColorHex = newValue.hexString
                             }
-                        if settings.wheelStyle.accentColorMode == .wallpaper {
-                            Label("壁纸颜色提取已预留接口，当前使用系统强调色作为回退。", systemImage: "info.circle")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
                     }
                 }
             }
@@ -161,6 +156,28 @@ struct SliderRow: View {
                 Text(title)
                 Spacer()
                 Text("\(Int(value))\(suffix)")
+                    .font(.callout.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            Slider(value: $value, in: range, step: step)
+        }
+    }
+}
+
+struct SliderRowDecimal: View {
+    var title: String
+    @Binding var value: Double
+    var range: ClosedRange<Double>
+    var step: Double
+    var suffix: String
+    var format: String = "%.2f"
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(title)
+                Spacer()
+                Text(String(format: "\(format)\(suffix)", value))
                     .font(.callout.monospacedDigit())
                     .foregroundStyle(.secondary)
             }

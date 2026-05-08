@@ -106,6 +106,18 @@ enum RadialMenuSlot: String, CaseIterable, Codable, Identifiable {
         .bottomLeft, .bottom, .bottomRight
     ]
 
+    static let assignmentGridOrder: [RadialMenuSlot?] = [
+        .topLeft, .top, .topRight,
+        .left, nil, .right,
+        .bottomLeft, .bottom, .bottomRight
+    ]
+
+    static let assignable: [RadialMenuSlot] = [
+        .topLeft, .top, .topRight,
+        .left, .right,
+        .bottomLeft, .bottom, .bottomRight
+    ]
+
     static let directional: [RadialMenuSlot] = [
         .right, .topRight, .top, .topLeft, .left, .bottomLeft, .bottom, .bottomRight
     ]
@@ -113,9 +125,8 @@ enum RadialMenuSlot: String, CaseIterable, Codable, Identifiable {
     static func nearestSlot(delta: CGSize, directionalThreshold: CGFloat, noActionThreshold: CGFloat) -> RadialMenuSlot? {
         let distance = hypot(delta.width, delta.height)
         guard distance >= noActionThreshold else { return nil }
-        guard distance >= directionalThreshold else { return .center }
 
-        let radians = atan2(-delta.height, delta.width)
+        let radians = atan2(delta.height, delta.width)
         var degrees = radians * 180 / .pi
         if degrees < 0 { degrees += 360 }
 

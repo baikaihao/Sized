@@ -3,7 +3,6 @@ import SwiftUI
 
 enum AccentColorMode: String, CaseIterable, Codable, Identifiable {
     case system
-    case wallpaper
     case custom
 
     var id: String { rawValue }
@@ -11,7 +10,6 @@ enum AccentColorMode: String, CaseIterable, Codable, Identifiable {
     var displayName: String {
         switch self {
         case .system: "系统"
-        case .wallpaper: "壁纸提取"
         case .custom: "自定义"
         }
     }
@@ -158,20 +156,74 @@ extension WheelStyleSettings {
     }
 }
 
+enum OptionSide: String, CaseIterable, Codable, Identifiable {
+    case left
+    case right
+    case both
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .left: "左侧 Option"
+        case .right: "右侧 Option"
+        case .both: "两侧 Option"
+        }
+    }
+}
+
 struct TriggerSettings: Codable, Equatable {
     var triggerKeyDisplayName: String
+    var useOptionAsTrigger: Bool
+    var optionSide: OptionSide
     var triggerDelayMilliseconds: Double
     var doubleTapTrigger: Bool
     var middleClickTrigger: Bool
     var timeoutSeconds: Double
 
     static let `default` = TriggerSettings(
-        triggerKeyDisplayName: "右⌥",
+        triggerKeyDisplayName: "⌃E",
+        useOptionAsTrigger: false,
+        optionSide: .right,
         triggerDelayMilliseconds: 0,
         doubleTapTrigger: false,
         middleClickTrigger: true,
         timeoutSeconds: 5
     )
+}
+
+extension TriggerSettings {
+    private enum CodingKeys: String, CodingKey {
+        case triggerKeyDisplayName
+        case useOptionAsTrigger
+        case optionSide
+        case triggerDelayMilliseconds
+        case doubleTapTrigger
+        case middleClickTrigger
+        case timeoutSeconds
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        triggerKeyDisplayName = try container.decodeIfPresent(String.self, forKey: .triggerKeyDisplayName) ?? Self.default.triggerKeyDisplayName
+        useOptionAsTrigger = try container.decodeIfPresent(Bool.self, forKey: .useOptionAsTrigger) ?? Self.default.useOptionAsTrigger
+        optionSide = try container.decodeIfPresent(OptionSide.self, forKey: .optionSide) ?? Self.default.optionSide
+        triggerDelayMilliseconds = try container.decodeIfPresent(Double.self, forKey: .triggerDelayMilliseconds) ?? Self.default.triggerDelayMilliseconds
+        doubleTapTrigger = try container.decodeIfPresent(Bool.self, forKey: .doubleTapTrigger) ?? Self.default.doubleTapTrigger
+        middleClickTrigger = try container.decodeIfPresent(Bool.self, forKey: .middleClickTrigger) ?? Self.default.middleClickTrigger
+        timeoutSeconds = try container.decodeIfPresent(Double.self, forKey: .timeoutSeconds) ?? Self.default.timeoutSeconds
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(triggerKeyDisplayName, forKey: .triggerKeyDisplayName)
+        try container.encode(useOptionAsTrigger, forKey: .useOptionAsTrigger)
+        try container.encode(optionSide, forKey: .optionSide)
+        try container.encode(triggerDelayMilliseconds, forKey: .triggerDelayMilliseconds)
+        try container.encode(doubleTapTrigger, forKey: .doubleTapTrigger)
+        try container.encode(middleClickTrigger, forKey: .middleClickTrigger)
+        try container.encode(timeoutSeconds, forKey: .timeoutSeconds)
+    }
 }
 
 struct BehaviorSettings: Codable, Equatable {
@@ -184,6 +236,8 @@ struct BehaviorSettings: Codable, Equatable {
     var previewCornerRadius: Double
     var previewBorderWidth: Double
     var previewBorderColorHex: String
+    var previewBackgroundColorHex: String
+    var previewAnimationSpeed: Double
     var hapticFeedback: Bool
 
     static let `default` = BehaviorSettings(
@@ -196,8 +250,59 @@ struct BehaviorSettings: Codable, Equatable {
         previewCornerRadius: 12,
         previewBorderWidth: 2,
         previewBorderColorHex: "#0A84FF",
+        previewBackgroundColorHex: "#0A84FF",
+        previewAnimationSpeed: 0.2,
         hapticFeedback: true
     )
+}
+
+extension BehaviorSettings {
+    private enum CodingKeys: String, CodingKey {
+        case confirmationMode
+        case resizeAnimation
+        case resizeAnchor
+        case ignoreFullScreenWindows
+        case showPreview
+        case previewPadding
+        case previewCornerRadius
+        case previewBorderWidth
+        case previewBorderColorHex
+        case previewBackgroundColorHex
+        case previewAnimationSpeed
+        case hapticFeedback
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        confirmationMode = try container.decodeIfPresent(ConfirmationMode.self, forKey: .confirmationMode) ?? Self.default.confirmationMode
+        resizeAnimation = try container.decodeIfPresent(Bool.self, forKey: .resizeAnimation) ?? Self.default.resizeAnimation
+        resizeAnchor = try container.decodeIfPresent(ResizeAnchor.self, forKey: .resizeAnchor) ?? Self.default.resizeAnchor
+        ignoreFullScreenWindows = try container.decodeIfPresent(Bool.self, forKey: .ignoreFullScreenWindows) ?? Self.default.ignoreFullScreenWindows
+        showPreview = try container.decodeIfPresent(Bool.self, forKey: .showPreview) ?? Self.default.showPreview
+        previewPadding = try container.decodeIfPresent(Double.self, forKey: .previewPadding) ?? Self.default.previewPadding
+        previewCornerRadius = try container.decodeIfPresent(Double.self, forKey: .previewCornerRadius) ?? Self.default.previewCornerRadius
+        previewBorderWidth = try container.decodeIfPresent(Double.self, forKey: .previewBorderWidth) ?? Self.default.previewBorderWidth
+        previewBorderColorHex = try container.decodeIfPresent(String.self, forKey: .previewBorderColorHex) ?? Self.default.previewBorderColorHex
+        previewBackgroundColorHex = try container.decodeIfPresent(String.self, forKey: .previewBackgroundColorHex) ?? Self.default.previewBackgroundColorHex
+        previewAnimationSpeed = try container.decodeIfPresent(Double.self, forKey: .previewAnimationSpeed) ?? Self.default.previewAnimationSpeed
+        hapticFeedback = try container.decodeIfPresent(Bool.self, forKey: .hapticFeedback) ?? Self.default.hapticFeedback
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(confirmationMode, forKey: .confirmationMode)
+        try container.encode(resizeAnimation, forKey: .resizeAnimation)
+        try container.encode(resizeAnchor, forKey: .resizeAnchor)
+        try container.encode(ignoreFullScreenWindows, forKey: .ignoreFullScreenWindows)
+        try container.encode(showPreview, forKey: .showPreview)
+        try container.encode(previewPadding, forKey: .previewPadding)
+        try container.encode(previewCornerRadius, forKey: .previewCornerRadius)
+        try container.encode(previewBorderWidth, forKey: .previewBorderWidth)
+        try container.encode(previewBorderColorHex, forKey: .previewBorderColorHex)
+        try container.encode(previewBackgroundColorHex, forKey: .previewBackgroundColorHex)
+        try container.encode(previewAnimationSpeed, forKey: .previewAnimationSpeed)
+        try container.encode(hapticFeedback, forKey: .hapticFeedback)
+    }
 }
 
 struct GeneralSettings: Codable, Equatable {
