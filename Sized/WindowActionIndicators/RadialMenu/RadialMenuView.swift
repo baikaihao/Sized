@@ -22,7 +22,7 @@ struct RadialMenuView: View {
     private var cornerRadius: CGFloat { CGFloat(style.cornerRadius) }
     private var accent: Color {
         switch style.accentColorMode {
-        case .system, .wallpaper:
+        case .system:
             Color.accentColor
         case .custom:
             Color(hex: style.primaryColorHex)
@@ -33,11 +33,17 @@ struct RadialMenuView: View {
     private var shouldShowWheelContent: Bool {
         (style.isVisible || isPreview) && !(style.hideWhenNoSelection && selectedSlot == nil)
     }
+    private var shouldShowCenterBadge: Bool {
+        !hasTargetWindow || shouldShowWheelContent
+    }
 
     var body: some View {
         ZStack {
-            if shouldShowWheelContent {
+            if hasTargetWindow && shouldShowWheelContent {
                 ring
+            }
+
+            if shouldShowCenterBadge {
                 centerBadge
             }
         }

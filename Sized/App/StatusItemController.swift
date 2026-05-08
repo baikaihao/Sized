@@ -19,7 +19,9 @@ final class StatusItemController {
     private func show() {
         guard statusItem == nil else { return }
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.image = NSImage(systemSymbolName: "circle.grid.cross", accessibilityDescription: "Sized")
+        let icon = NSImage(named: "MenuBarIcon")
+        icon?.isTemplate = true
+        item.button?.image = icon
         item.button?.imagePosition = .imageOnly
 
         let menu = NSMenu()

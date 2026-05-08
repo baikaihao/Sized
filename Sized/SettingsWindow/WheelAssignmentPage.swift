@@ -2,7 +2,7 @@ import SwiftUI
 
 struct WheelAssignmentPage: View {
     @EnvironmentObject private var settings: SettingsStore
-    @State private var selectedSlot: RadialMenuSlot = .center
+    @State private var selectedSlot: RadialMenuSlot = .right
     @State private var exportText = ""
     @State private var showingExport = false
     @State private var showingImport = false
@@ -21,7 +21,7 @@ struct WheelAssignmentPage: View {
             VStack(alignment: .leading, spacing: 24) {
                 PageHeader(
                     title: "尺寸分配",
-                    subtitle: "为 8 个方向和中心区域配置窗口尺寸；方向只用于选择，不会把窗口移动到对应角落。"
+                    subtitle: "为 8 个方向配置窗口尺寸；方向只用于选择，不会把窗口移动到对应角落。"
                 )
 
                 HStack(alignment: .top, spacing: 28) {
@@ -88,23 +88,29 @@ private struct AssignmentGrid: View {
 
     var body: some View {
         LazyVGrid(columns: columns, spacing: 10) {
-            ForEach(RadialMenuSlot.visualOrder) { slot in
-                AssignmentGridCell(
-                    slot: slot,
-                    action: settings.assignments[slot],
-                    isSelected: selectedSlot == slot
-                ) {
-                    selectedSlot = slot
-                }
-                .draggable(slot.rawValue)
-                .dropDestination(for: String.self) { items, _ in
-                    guard let rawValue = items.first, let source = RadialMenuSlot(rawValue: rawValue), source != slot else { return false }
-                    let sourceAction = settings.assignments[source]
-                    let targetAction = settings.assignments[slot]
-                    settings.assignments[source] = targetAction
-                    settings.assignments[slot] = sourceAction
-                    selectedSlot = slot
-                    return true
+            ForEach(Array(RadialMenuSlot.assignmentGridOrder.enumerated()), id: \.offset) { _, slot in
+                if let slot {
+                    AssignmentGridCell(
+                        slot: slot,
+                        action: settings.assignments[slot],
+                        isSelected: selectedSlot == slot
+                    ) {
+                        selectedSlot = slot
+                    }
+                    .draggable(slot.rawValue)
+                    .dropDestination(for: String.self) { items, _ in
+                        guard let rawValue = items.first, let source = RadialMenuSlot(rawValue: rawValue), source != slot else { return false }
+                        guard RadialMenuSlot.assignable.contains(source) else { return false }
+                        let sourceAction = settings.assignments[source]
+                        let targetAction = settings.assignments[slot]
+                        settings.assignments[source] = targetAction
+                        settings.assignments[slot] = sourceAction
+                        selectedSlot = slot
+                        return true
+                    }
+                } else {
+                    Color.clear
+                        .frame(width: 118, height: 104)
                 }
             }
         }

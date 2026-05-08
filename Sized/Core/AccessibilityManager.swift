@@ -9,6 +9,8 @@ final class AccessibilityManager: ObservableObject {
     @Published private(set) var isTrusted: Bool = AXIsProcessTrusted()
 
     private var refreshTask: Task<Void, Never>?
+    private var lastRequestTime: Date = .distantPast
+    private let requestCooldown: TimeInterval = 5
 
     private init() {}
 
@@ -23,6 +25,10 @@ final class AccessibilityManager: ObservableObject {
     }
 
     func requestAccess() {
+        let now = Date()
+        guard now.timeIntervalSince(lastRequestTime) >= requestCooldown else { return }
+        lastRequestTime = now
+
         let key = kAXTrustedCheckOptionPrompt.takeRetainedValue() as String
         AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
         openPrivacySettings()

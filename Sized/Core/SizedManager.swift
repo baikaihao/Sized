@@ -88,6 +88,11 @@ final class SizedManager: ObservableObject {
         guard !isLoopActive else { return }
         AccessibilityManager.shared.refresh()
 
+        guard AccessibilityManager.shared.isTrusted else {
+            AccessibilityManager.shared.requestAccess()
+            return
+        }
+
         frontmostApplication = NSWorkspace.shared.frontmostApplication
         triggerOrigin = NSEvent.mouseLocation
         selectedSlot = nil

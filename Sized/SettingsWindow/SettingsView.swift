@@ -3,6 +3,7 @@ import SwiftUI
 enum SettingsPage: String, CaseIterable, Identifiable {
     case wheelStyle
     case wheelAssignment
+    case previewStyle
     case general
 
     var id: String { rawValue }
@@ -11,6 +12,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
         switch self {
         case .wheelStyle: "轮盘样式"
         case .wheelAssignment: "尺寸分配"
+        case .previewStyle: "预览窗口"
         case .general: "设置"
         }
     }
@@ -19,6 +21,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
         switch self {
         case .wheelStyle: "paintpalette"
         case .wheelAssignment: "circle.grid.cross"
+        case .previewStyle: "rectangle.dashed"
         case .general: "gearshape"
         }
     }
@@ -42,6 +45,8 @@ struct SettingsView: View {
                 WheelStylePage()
             case .wheelAssignment:
                 WheelAssignmentPage()
+            case .previewStyle:
+                PreviewStylePage()
             case .general:
                 GeneralSettingsPage()
             }
@@ -70,7 +75,3 @@ private struct AppBackgroundView: View {
     }
 }
 
-#Preview {
-    SettingsView()
-        .environmentObject(SettingsStore.shared)
-}
