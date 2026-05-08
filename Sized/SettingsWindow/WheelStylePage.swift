@@ -1,0 +1,200 @@
+import SwiftUI
+
+struct WheelStylePage: View {
+    @EnvironmentObject private var settings: SettingsStore
+    @State private var previewSlot: RadialMenuSlot? = .right
+    @State private var primaryColor = Color(hex: WheelStyleSettings.default.primaryColorHex)
+    @State private var secondaryColor = Color(hex: WheelStyleSettings.default.secondaryColorHex)
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                PageHeader(
+                    title: "轮盘样式",
+                    subtitle: "调整轮盘的尺寸、颜色、显示位置和动画效果。"
+                )
+
+                HStack(alignment: .top, spacing: 28) {
+                    WheelPreviewPanel(
+                        selectedSlot: $previewSlot,
+                        action: previewSlot.map { settings.assignments[$0] },
+                        style: settings.wheelStyle
+                    )
+                    .frame(width: 300)
+
+                    VStack(spacing: 16) {
+                        SettingsSection(title: "基础外观", systemImage: "circle.dashed") {
+                            Toggle("显示轮盘", isOn: $settings.wheelStyle.isVisible)
+                            SliderRow(title: "轮盘大小", value: $settings.wheelStyle.size, range: 60...200, step: 1, suffix: "pt")
+                            SliderRow(title: "轮盘厚度", value: $settings.wheelStyle.thickness, range: 10...60, step: 1, suffix: "pt")
+                            SliderRow(title: "圆角半径", value: $settings.wheelStyle.cornerRadius, range: 0...50, step: 1, suffix: "pt")
+                            Toggle("锁定到屏幕中心", isOn: $settings.wheelStyle.lockToScreenCenter)
+                            Toggle("隐藏无选择时的轮盘", isOn: $settings.wheelStyle.hideWhenNoSelection)
+                        }
+
+                        SettingsSection(title: "动画", systemImage: "sparkles") {
+                            Toggle("出现动画", isOn: $settings.wheelStyle.appearanceAnimation)
+                            PickerRow(title: "大小变化动画", selection: $settings.wheelStyle.sizeAnimation)
+                            PickerRow(title: "角度变化动画", selection: $settings.wheelStyle.angleAnimation)
+                        }
+
+                        SettingsSection(title: "强调色", systemImage: "eyedropper") {
+                            PickerRow(title: "颜色模式", selection: $settings.wheelStyle.accentColorMode)
+                            ColorPicker("主色", selection: $primaryColor, supportsOpacity: false)
+                                .disabled(settings.wheelStyle.accentColorMode == .system)
+                                .onChange(of: primaryColor) { _, newValue in
+                                    settings.wheelStyle.primaryColorHex = newValue.hexString
+                                }
+                            Toggle("使用渐变", isOn: $settings.wheelStyle.useGradient)
+                            ColorPicker("渐变色", selection: $secondaryColor, supportsOpacity: false)
+                                .disabled(!settings.wheelStyle.useGradient)
+                                .onChange(of: secondaryColor) { _, newValue in
+                                    settings.wheelStyle.secondaryColorHex = newValue.hexString
+                                }
+                            if settings.wheelStyle.accentColorMode == .wallpaper {
+                                Label("壁纸颜色提取已预留接口，当前使用系统强调色作为回退。", systemImage: "info.circle")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(32)
+        }
+        .onAppear {
+            primaryColor = Color(hex: settings.wheelStyle.primaryColorHex)
+            secondaryColor = Color(hex: settings.wheelStyle.secondaryColorHex)
+        }
+    }
+}
+
+struct WheelPreviewPanel: View {
+    @Binding var selectedSlot: RadialMenuSlot?
+    var action: RadialMenuAction?
+    var style: WheelStyleSettings
+
+    var body: some View {
+        SettingsSection(title: "实时预览", systemImage: "eye") {
+            VStack(spacing: 20) {
+                ZStack {
+                    RadialMenuView(
+                        selectedSlot: selectedSlot,
+                        action: action,
+                        style: style,
+                        hasTargetWindow: true,
+                        isShown: true,
+                        isPreview: true
+                    )
+                    .frame(width: max(style.size + 96, 220), height: max(style.size + 96, 220))
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 240)
+
+                Picker("模拟选择", selection: Binding(
+                    get: { selectedSlot ?? .center },
+                    set: { selectedSlot = $0 }
+                )) {
+                    ForEach(RadialMenuSlot.visualOrder) { slot in
+                        Text(slot.displayName).tag(slot)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                Text(action?.displayName ?? "未选择")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+}
+
+struct PageHeader: View {
+    var title: String
+    var subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.system(size: 30, weight: .semibold))
+            Text(subtitle)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct SettingsSection<Content: View>: View {
+    var title: String
+    var systemImage: String
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label(title, systemImage: systemImage)
+                .font(.headline)
+
+            VStack(alignment: .leading, spacing: 12) {
+                content
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(.thinMaterial)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(.quaternary)
+        }
+    }
+}
+
+struct SliderRow: View {
+    var title: String
+    @Binding var value: Double
+    var range: ClosedRange<Double>
+    var step: Double
+    var suffix: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(title)
+                Spacer()
+                Text("\(Int(value))\(suffix)")
+                    .font(.callout.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            Slider(value: $value, in: range, step: step)
+        }
+    }
+}
+
+struct PickerRow<Value: Hashable & CaseIterable & Identifiable>: View where Value.AllCases: RandomAccessCollection {
+    var title: String
+    @Binding var selection: Value
+
+    var body: some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Picker(title, selection: $selection) {
+                ForEach(Array(Value.allCases)) { value in
+                    Text(displayName(for: value)).tag(value)
+                }
+            }
+            .labelsHidden()
+            .frame(width: 180)
+        }
+    }
+
+    private func displayName(for value: Value) -> String {
+        if let value = value as? AccentColorMode { return value.displayName }
+        if let value = value as? RadialAnimationStyle { return value.displayName }
+        if let value = value as? ConfirmationMode { return value.displayName }
+        if let value = value as? ResizeAnchor { return value.displayName }
+        return String(describing: value)
+    }
+}
