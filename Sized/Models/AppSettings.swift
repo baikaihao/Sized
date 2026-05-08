@@ -66,6 +66,8 @@ struct WheelStyleSettings: Codable, Equatable {
     var size: Double
     var thickness: Double
     var cornerRadius: Double
+    var centerSize: Double
+    var centerCornerRadius: Double
     var lockToScreenCenter: Bool
     var hideWhenNoSelection: Bool
     var appearanceAnimation: Bool
@@ -81,6 +83,8 @@ struct WheelStyleSettings: Codable, Equatable {
         size: 100,
         thickness: 30,
         cornerRadius: 50,
+        centerSize: 44,
+        centerCornerRadius: 22,
         lockToScreenCenter: false,
         hideWhenNoSelection: false,
         appearanceAnimation: true,
@@ -91,6 +95,67 @@ struct WheelStyleSettings: Codable, Equatable {
         useGradient: false,
         secondaryColorHex: "#5E5CE6"
     )
+}
+
+extension WheelStyleSettings {
+    private enum CodingKeys: String, CodingKey {
+        case isVisible
+        case size
+        case thickness
+        case cornerRadius
+        case centerSize
+        case centerCornerRadius
+        case lockToScreenCenter
+        case hideWhenNoSelection
+        case appearanceAnimation
+        case sizeAnimation
+        case angleAnimation
+        case accentColorMode
+        case primaryColorHex
+        case useGradient
+        case secondaryColorHex
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        isVisible = try container.decodeIfPresent(Bool.self, forKey: .isVisible) ?? Self.default.isVisible
+        size = try container.decodeIfPresent(Double.self, forKey: .size) ?? Self.default.size
+        thickness = try container.decodeIfPresent(Double.self, forKey: .thickness) ?? Self.default.thickness
+        cornerRadius = try container.decodeIfPresent(Double.self, forKey: .cornerRadius) ?? Self.default.cornerRadius
+
+        let legacyCenterSize = max(44, size - thickness * 2 - 6)
+        centerSize = try container.decodeIfPresent(Double.self, forKey: .centerSize) ?? legacyCenterSize
+        centerCornerRadius = try container.decodeIfPresent(Double.self, forKey: .centerCornerRadius) ?? centerSize / 2
+
+        lockToScreenCenter = try container.decodeIfPresent(Bool.self, forKey: .lockToScreenCenter) ?? Self.default.lockToScreenCenter
+        hideWhenNoSelection = try container.decodeIfPresent(Bool.self, forKey: .hideWhenNoSelection) ?? Self.default.hideWhenNoSelection
+        appearanceAnimation = try container.decodeIfPresent(Bool.self, forKey: .appearanceAnimation) ?? Self.default.appearanceAnimation
+        sizeAnimation = try container.decodeIfPresent(RadialAnimationStyle.self, forKey: .sizeAnimation) ?? Self.default.sizeAnimation
+        angleAnimation = try container.decodeIfPresent(RadialAnimationStyle.self, forKey: .angleAnimation) ?? Self.default.angleAnimation
+        accentColorMode = try container.decodeIfPresent(AccentColorMode.self, forKey: .accentColorMode) ?? Self.default.accentColorMode
+        primaryColorHex = try container.decodeIfPresent(String.self, forKey: .primaryColorHex) ?? Self.default.primaryColorHex
+        useGradient = try container.decodeIfPresent(Bool.self, forKey: .useGradient) ?? Self.default.useGradient
+        secondaryColorHex = try container.decodeIfPresent(String.self, forKey: .secondaryColorHex) ?? Self.default.secondaryColorHex
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(isVisible, forKey: .isVisible)
+        try container.encode(size, forKey: .size)
+        try container.encode(thickness, forKey: .thickness)
+        try container.encode(cornerRadius, forKey: .cornerRadius)
+        try container.encode(centerSize, forKey: .centerSize)
+        try container.encode(centerCornerRadius, forKey: .centerCornerRadius)
+        try container.encode(lockToScreenCenter, forKey: .lockToScreenCenter)
+        try container.encode(hideWhenNoSelection, forKey: .hideWhenNoSelection)
+        try container.encode(appearanceAnimation, forKey: .appearanceAnimation)
+        try container.encode(sizeAnimation, forKey: .sizeAnimation)
+        try container.encode(angleAnimation, forKey: .angleAnimation)
+        try container.encode(accentColorMode, forKey: .accentColorMode)
+        try container.encode(primaryColorHex, forKey: .primaryColorHex)
+        try container.encode(useGradient, forKey: .useGradient)
+        try container.encode(secondaryColorHex, forKey: .secondaryColorHex)
+    }
 }
 
 struct TriggerSettings: Codable, Equatable {

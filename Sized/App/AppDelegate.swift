@@ -12,4 +12,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             SizedManager.shared.stop()
         }
     }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        Task { @MainActor in
+            SizedManager.shared.refreshPermissions()
+        }
+    }
 }

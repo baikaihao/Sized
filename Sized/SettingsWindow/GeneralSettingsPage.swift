@@ -3,7 +3,6 @@ import SwiftUI
 struct GeneralSettingsPage: View {
     @EnvironmentObject private var settings: SettingsStore
     @ObservedObject private var accessibility = AccessibilityManager.shared
-    @ObservedObject private var inputMonitoring = InputMonitoringManager.shared
     @State private var showingResetConfirmation = false
     @State private var launchAtLoginError: String?
 
@@ -51,34 +50,19 @@ struct GeneralSettingsPage: View {
                         Spacer()
 
                         Button {
-                            AccessibilityManager.shared.requestAccess()
+                            if accessibility.isTrusted {
+                                accessibility.refresh()
+                            } else {
+                                accessibility.requestAccess()
+                            }
                         } label: {
-                            Label("打开系统设置", systemImage: "gear")
-                        }
-                    }
-                }
-
-                SettingsSection(title: "输入监听权限", systemImage: "keyboard.badge.eye") {
-                    HStack {
-                        Label(
-                            inputMonitoring.statusText,
-                            systemImage: inputMonitoring.isTrusted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
-                        )
-                        .foregroundStyle(inputMonitoring.isTrusted ? .green : .orange)
-
-                        Spacer()
-
-                        Button {
-                            InputMonitoringManager.shared.requestAccess()
-                        } label: {
-                            Label(inputMonitoring.isTrusted ? "重新检查" : "申请权限", systemImage: "gear")
+                            Label(accessibility.isTrusted ? "重新检查" : "打开系统设置", systemImage: "gear")
                         }
 
                         Button {
-                            InputMonitoringManager.shared.refresh()
-                            InputMonitoringManager.shared.openPrivacySettings()
+                            accessibility.refresh()
                         } label: {
-                            Label("打开系统设置", systemImage: "arrow.up.forward.app")
+                            Label("刷新", systemImage: "arrow.clockwise")
                         }
                     }
                 }
@@ -138,8 +122,7 @@ struct GeneralSettingsPage: View {
         }
         .onAppear {
             settings.general.launchAtLogin = LaunchAtLoginManager.shared.isEnabled
-            accessibility.refresh()
-            inputMonitoring.refresh()
+            SizedManager.shared.refreshPermissions()
         }
     }
 

@@ -14,48 +14,47 @@ struct WheelStylePage: View {
                     subtitle: "调整轮盘的尺寸、颜色、显示位置和动画效果。"
                 )
 
-                HStack(alignment: .top, spacing: 28) {
+                VStack(spacing: 16) {
+                    SettingsSection(title: "基础外观", systemImage: "circle.dashed") {
+                        Toggle("显示轮盘", isOn: $settings.wheelStyle.isVisible)
+                        SliderRow(title: "轮盘大小", value: $settings.wheelStyle.size, range: 60...200, step: 1, suffix: "pt")
+                        SliderRow(title: "轮盘厚度", value: $settings.wheelStyle.thickness, range: 10...60, step: 1, suffix: "pt")
+                        SliderRow(title: "圆角半径", value: $settings.wheelStyle.cornerRadius, range: 0...50, step: 1, suffix: "pt")
+                        SliderRow(title: "中心大小", value: $settings.wheelStyle.centerSize, range: 28...140, step: 1, suffix: "pt")
+                        SliderRow(title: "中心圆角", value: $settings.wheelStyle.centerCornerRadius, range: 0...70, step: 1, suffix: "pt")
+                        Toggle("锁定到屏幕中心", isOn: $settings.wheelStyle.lockToScreenCenter)
+                        Toggle("隐藏无选择时的轮盘", isOn: $settings.wheelStyle.hideWhenNoSelection)
+                    }
+
                     WheelPreviewPanel(
                         selectedSlot: $previewSlot,
                         action: previewSlot.map { settings.assignments[$0] },
                         style: settings.wheelStyle
                     )
-                    .frame(width: 300)
 
-                    VStack(spacing: 16) {
-                        SettingsSection(title: "基础外观", systemImage: "circle.dashed") {
-                            Toggle("显示轮盘", isOn: $settings.wheelStyle.isVisible)
-                            SliderRow(title: "轮盘大小", value: $settings.wheelStyle.size, range: 60...200, step: 1, suffix: "pt")
-                            SliderRow(title: "轮盘厚度", value: $settings.wheelStyle.thickness, range: 10...60, step: 1, suffix: "pt")
-                            SliderRow(title: "圆角半径", value: $settings.wheelStyle.cornerRadius, range: 0...50, step: 1, suffix: "pt")
-                            Toggle("锁定到屏幕中心", isOn: $settings.wheelStyle.lockToScreenCenter)
-                            Toggle("隐藏无选择时的轮盘", isOn: $settings.wheelStyle.hideWhenNoSelection)
-                        }
+                    SettingsSection(title: "动画", systemImage: "sparkles") {
+                        Toggle("出现动画", isOn: $settings.wheelStyle.appearanceAnimation)
+                        PickerRow(title: "大小变化动画", selection: $settings.wheelStyle.sizeAnimation)
+                        PickerRow(title: "角度变化动画", selection: $settings.wheelStyle.angleAnimation)
+                    }
 
-                        SettingsSection(title: "动画", systemImage: "sparkles") {
-                            Toggle("出现动画", isOn: $settings.wheelStyle.appearanceAnimation)
-                            PickerRow(title: "大小变化动画", selection: $settings.wheelStyle.sizeAnimation)
-                            PickerRow(title: "角度变化动画", selection: $settings.wheelStyle.angleAnimation)
-                        }
-
-                        SettingsSection(title: "强调色", systemImage: "eyedropper") {
-                            PickerRow(title: "颜色模式", selection: $settings.wheelStyle.accentColorMode)
-                            ColorPicker("主色", selection: $primaryColor, supportsOpacity: false)
-                                .disabled(settings.wheelStyle.accentColorMode == .system)
-                                .onChange(of: primaryColor) { _, newValue in
-                                    settings.wheelStyle.primaryColorHex = newValue.hexString
-                                }
-                            Toggle("使用渐变", isOn: $settings.wheelStyle.useGradient)
-                            ColorPicker("渐变色", selection: $secondaryColor, supportsOpacity: false)
-                                .disabled(!settings.wheelStyle.useGradient)
-                                .onChange(of: secondaryColor) { _, newValue in
-                                    settings.wheelStyle.secondaryColorHex = newValue.hexString
-                                }
-                            if settings.wheelStyle.accentColorMode == .wallpaper {
-                                Label("壁纸颜色提取已预留接口，当前使用系统强调色作为回退。", systemImage: "info.circle")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
+                    SettingsSection(title: "强调色", systemImage: "eyedropper") {
+                        PickerRow(title: "颜色模式", selection: $settings.wheelStyle.accentColorMode)
+                        ColorPicker("主色", selection: $primaryColor, supportsOpacity: false)
+                            .disabled(settings.wheelStyle.accentColorMode == .system)
+                            .onChange(of: primaryColor) { _, newValue in
+                                settings.wheelStyle.primaryColorHex = newValue.hexString
                             }
+                        Toggle("使用渐变", isOn: $settings.wheelStyle.useGradient)
+                        ColorPicker("渐变色", selection: $secondaryColor, supportsOpacity: false)
+                            .disabled(!settings.wheelStyle.useGradient)
+                            .onChange(of: secondaryColor) { _, newValue in
+                                settings.wheelStyle.secondaryColorHex = newValue.hexString
+                            }
+                        if settings.wheelStyle.accentColorMode == .wallpaper {
+                            Label("壁纸颜色提取已预留接口，当前使用系统强调色作为回退。", systemImage: "info.circle")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -89,19 +88,17 @@ struct WheelPreviewPanel: View {
                     .frame(width: max(RadialMenuView.canvasSize(for: style) + 16, 220), height: max(RadialMenuView.canvasSize(for: style) + 16, 220))
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 240)
+                .frame(height: max(RadialMenuView.canvasSize(for: style) + 28, 240))
 
-                Picker("模拟选择", selection: Binding(
-                    get: { selectedSlot ?? .center },
-                    set: { selectedSlot = $0 }
-                )) {
+                Picker("模拟选择", selection: $selectedSlot) {
+                    Text("无选择").tag(nil as RadialMenuSlot?)
                     ForEach(RadialMenuSlot.visualOrder) { slot in
-                        Text(slot.displayName).tag(slot)
+                        Text(slot.displayName).tag(Optional(slot))
                     }
                 }
                 .pickerStyle(.menu)
 
-                Text(action?.displayName ?? "未选择")
+                Text(selectedSlot == nil ? "未选择" : action?.displayName ?? "未选择")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
             }
