@@ -3,6 +3,7 @@ import SwiftUI
 enum SettingsPage: String, CaseIterable, Identifiable {
     case wheelStyle
     case wheelAssignment
+    case appRules
     case previewStyle
     case general
 
@@ -10,10 +11,11 @@ enum SettingsPage: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .wheelStyle: "轮盘样式"
-        case .wheelAssignment: "尺寸分配"
-        case .previewStyle: "预览窗口"
-        case .general: "设置"
+        case .wheelStyle: "轮盘样式".localized
+        case .wheelAssignment: "尺寸分配".localized
+        case .appRules: "应用规则".localized
+        case .previewStyle: "预览窗口".localized
+        case .general: "设置".localized
         }
     }
 
@@ -21,6 +23,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
         switch self {
         case .wheelStyle: "paintpalette"
         case .wheelAssignment: "circle.grid.cross"
+        case .appRules: "app.badge"
         case .previewStyle: "rectangle.dashed"
         case .general: "gearshape"
         }
@@ -45,6 +48,8 @@ struct SettingsView: View {
                 WheelStylePage()
             case .wheelAssignment:
                 WheelAssignmentPage()
+            case .appRules:
+                AppRulesPage()
             case .previewStyle:
                 PreviewStylePage()
             case .general:
@@ -74,4 +79,3 @@ private struct AppBackgroundView: View {
         .ignoresSafeArea()
     }
 }
-

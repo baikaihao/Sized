@@ -136,7 +136,7 @@ struct GeneralSettingsPage: View {
             Text("Sized")
                 .font(.system(size: 32, weight: .semibold))
 
-            Text("版本 \(Bundle.main.shortVersion) (\(Bundle.main.buildNumber))")
+            Text("版本 %@ (%@)".localizedFormat(Bundle.main.shortVersion, Bundle.main.buildNumber))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -152,7 +152,7 @@ private struct TriggerRecorderButton: View {
         Button {
             isRecording.toggle()
             if isRecording {
-                displayName = "按下快捷键..."
+                displayName = "按下快捷键...".localized
             }
         } label: {
             Text(displayName)

@@ -9,13 +9,6 @@ struct WheelAssignmentPage: View {
     @State private var importText = ""
     @State private var importError: String?
 
-    var selectedAction: Binding<RadialMenuAction> {
-        Binding(
-            get: { settings.assignments[selectedSlot] },
-            set: { settings.assignments[selectedSlot] = $0 }
-        )
-    }
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -24,40 +17,33 @@ struct WheelAssignmentPage: View {
                     subtitle: "为 8 个方向配置窗口尺寸；方向只用于选择，不会把窗口移动到对应角落。"
                 )
 
-                HStack(alignment: .top, spacing: 28) {
-                    SettingsSection(title: "可视化编辑器", systemImage: "circle.grid.cross") {
-                        AssignmentGrid(selectedSlot: $selectedSlot)
-                            .environmentObject(settings)
-                            .frame(maxWidth: .infinity)
+                AssignmentEditor(assignments: $settings.assignments, selectedSlot: $selectedSlot)
 
-                        HStack {
-                            Button {
-                                settings.resetAssignments()
-                            } label: {
-                                Label("恢复默认分配", systemImage: "arrow.counterclockwise")
-                            }
+                SettingsSection(title: "配置管理", systemImage: "doc.badge.gearshape") {
+                    HStack {
+                        Button {
+                            settings.resetAssignments()
+                        } label: {
+                            Label("恢复默认分配", systemImage: "arrow.counterclockwise")
+                        }
 
-                            Spacer()
+                        Spacer()
 
-                            Button {
-                                exportText = (try? settings.exportJSON()) ?? ""
-                                showingExport = true
-                            } label: {
-                                Label("导出", systemImage: "square.and.arrow.up")
-                            }
+                        Button {
+                            exportText = (try? settings.exportJSON()) ?? ""
+                            showingExport = true
+                        } label: {
+                            Label("导出", systemImage: "square.and.arrow.up")
+                        }
 
-                            Button {
-                                importText = ""
-                                importError = nil
-                                showingImport = true
-                            } label: {
-                                Label("导入", systemImage: "square.and.arrow.down")
-                            }
+                        Button {
+                            importText = ""
+                            importError = nil
+                            showingImport = true
+                        } label: {
+                            Label("导入", systemImage: "square.and.arrow.down")
                         }
                     }
-                    .frame(width: 430)
-
-                    AssignmentDetailPanel(slot: selectedSlot, action: selectedAction)
                 }
             }
             .padding(32)
@@ -73,15 +59,39 @@ struct WheelAssignmentPage: View {
                     try settings.importJSON(importText)
                     showingImport = false
                 } catch {
-                    importError = "配置文件格式无效：\(error.localizedDescription)"
+                    importError = "配置文件格式无效：%@".localizedFormat(error.localizedDescription)
                 }
             }
         }
     }
 }
 
+struct AssignmentEditor: View {
+    @Binding var assignments: AssignmentSettings
+    @Binding var selectedSlot: RadialMenuSlot
+
+    private var selectedAction: Binding<RadialMenuAction> {
+        Binding(
+            get: { assignments[selectedSlot] },
+            set: { assignments[selectedSlot] = $0 }
+        )
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 28) {
+            SettingsSection(title: "可视化编辑器", systemImage: "circle.grid.cross") {
+                AssignmentGrid(assignments: $assignments, selectedSlot: $selectedSlot)
+                    .frame(maxWidth: .infinity)
+            }
+            .frame(width: 430)
+
+            AssignmentDetailPanel(slot: selectedSlot, action: selectedAction)
+        }
+    }
+}
+
 private struct AssignmentGrid: View {
-    @EnvironmentObject private var settings: SettingsStore
+    @Binding var assignments: AssignmentSettings
     @Binding var selectedSlot: RadialMenuSlot
 
     private let columns = Array(repeating: GridItem(.fixed(118), spacing: 10), count: 3)
@@ -92,7 +102,7 @@ private struct AssignmentGrid: View {
                 if let slot {
                     AssignmentGridCell(
                         slot: slot,
-                        action: settings.assignments[slot],
+                        action: assignments[slot],
                         isSelected: selectedSlot == slot
                     ) {
                         selectedSlot = slot
@@ -101,10 +111,10 @@ private struct AssignmentGrid: View {
                     .dropDestination(for: String.self) { items, _ in
                         guard let rawValue = items.first, let source = RadialMenuSlot(rawValue: rawValue), source != slot else { return false }
                         guard RadialMenuSlot.assignable.contains(source) else { return false }
-                        let sourceAction = settings.assignments[source]
-                        let targetAction = settings.assignments[slot]
-                        settings.assignments[source] = targetAction
-                        settings.assignments[slot] = sourceAction
+                        let sourceAction = assignments[source]
+                        let targetAction = assignments[slot]
+                        assignments[source] = targetAction
+                        assignments[slot] = sourceAction
                         selectedSlot = slot
                         return true
                     }
@@ -180,7 +190,7 @@ private struct AssignmentDetailPanel: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            SettingsSection(title: "\(slot.displayName) 槽位", systemImage: slot.systemImage) {
+            SettingsSection(title: "%@ 槽位".localizedFormat(slot.displayName), systemImage: slot.systemImage) {
                 Picker("尺寸", selection: $action.kind) {
                     ForEach(SizePresetCategory.allCases) { category in
                         Section(category.displayName) {
@@ -195,7 +205,7 @@ private struct AssignmentDetailPanel: View {
                     .textFieldStyle(.roundedBorder)
 
                 HStack {
-                    Text(action.kind.displayName)
+            Text(action.kind.displayName.localized)
                         .font(.headline)
                     Spacer()
                 }
@@ -230,9 +240,9 @@ private struct NumericField: View {
 
     var body: some View {
         HStack {
-            Text(title)
+            Text(title.localized)
             Spacer()
-            TextField(title, value: $value, format: .number.precision(.fractionLength(0...1)))
+            TextField(title.localized, value: $value, format: .number.precision(.fractionLength(0...1)))
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 120)
         }
@@ -250,7 +260,7 @@ private struct JSONSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(title)
+            Text(title.localized)
                 .font(.title2.weight(.semibold))
 
             TextEditor(text: $text)

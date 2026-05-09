@@ -16,29 +16,29 @@ enum RadialMenuSlot: String, CaseIterable, Codable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .topLeft: "左上"
-        case .top: "上"
-        case .topRight: "右上"
-        case .left: "左"
-        case .center: "中心"
-        case .right: "右"
-        case .bottomLeft: "左下"
-        case .bottom: "下"
-        case .bottomRight: "右下"
+        case .topLeft: "左上".localized
+        case .top: "上".localized
+        case .topRight: "右上".localized
+        case .left: "左".localized
+        case .center: "中心".localized
+        case .right: "右".localized
+        case .bottomLeft: "左下".localized
+        case .bottom: "下".localized
+        case .bottomRight: "右下".localized
         }
     }
 
     var shortName: String {
         switch self {
-        case .topLeft: "左上"
-        case .top: "上"
-        case .topRight: "右上"
-        case .left: "左"
-        case .center: "中"
-        case .right: "右"
-        case .bottomLeft: "左下"
-        case .bottom: "下"
-        case .bottomRight: "右下"
+        case .topLeft: "左上".localized
+        case .top: "上".localized
+        case .topRight: "右上".localized
+        case .left: "左".localized
+        case .center: "中".localized
+        case .right: "右".localized
+        case .bottomLeft: "左下".localized
+        case .bottom: "下".localized
+        case .bottomRight: "右下".localized
         }
     }
 

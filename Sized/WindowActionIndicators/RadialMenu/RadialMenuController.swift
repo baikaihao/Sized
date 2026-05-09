@@ -11,14 +11,14 @@ final class RadialMenuController {
         panel?.isVisible == true
     }
 
-    func show(at origin: CGPoint, selectedSlot: RadialMenuSlot?, action: RadialMenuAction?, hasTargetWindow: Bool) {
+    func show(at origin: CGPoint, selectedSlot: RadialMenuSlot?, action: RadialMenuAction?, assignments: AssignmentSettings, hasTargetWindow: Bool) {
         let style = settings.wheelStyle
         let size = RadialMenuView.canvasSize(for: style)
         let screen = ScreenUtility.screen(containing: origin)
         let center = style.lockToScreenCenter ? ScreenUtility.centerPoint(in: screen) : origin
         let frame = CGRect(x: center.x - size / 2, y: center.y - size / 2, width: size, height: size)
 
-        viewModel.update(selectedSlot: selectedSlot, action: action, hasTargetWindow: hasTargetWindow)
+        viewModel.update(selectedSlot: selectedSlot, action: action, assignments: assignments, hasTargetWindow: hasTargetWindow)
         viewModel.setIsShown(false)
 
         let panel = panel ?? makePanel(size: size)
@@ -36,8 +36,8 @@ final class RadialMenuController {
         }
     }
 
-    func update(selectedSlot: RadialMenuSlot?, action: RadialMenuAction?, hasTargetWindow: Bool) {
-        viewModel.update(selectedSlot: selectedSlot, action: action, hasTargetWindow: hasTargetWindow)
+    func update(selectedSlot: RadialMenuSlot?, action: RadialMenuAction?, assignments: AssignmentSettings, hasTargetWindow: Bool) {
+        viewModel.update(selectedSlot: selectedSlot, action: action, assignments: assignments, hasTargetWindow: hasTargetWindow)
     }
 
     func hide() {
@@ -77,6 +77,7 @@ private struct RadialMenuPanelContent: View {
         RadialMenuView(
             selectedSlot: viewModel.selectedSlot,
             action: viewModel.action,
+            assignments: viewModel.assignments,
             style: settings.wheelStyle,
             hasTargetWindow: viewModel.hasTargetWindow,
             isShown: viewModel.isShown

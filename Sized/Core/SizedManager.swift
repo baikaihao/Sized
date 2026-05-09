@@ -34,6 +34,7 @@ final class SizedManager: ObservableObject {
     private var triggerOrigin = CGPoint.zero
     private var selectedSlot: RadialMenuSlot?
     private var frontmostApplication: NSRunningApplication?
+    private var activeAssignments: AssignmentSettings = .default
     private var didStartEventTriggers = false
 
     private init() {}
@@ -95,12 +96,13 @@ final class SizedManager: ObservableObject {
         }
 
         frontmostApplication = NSWorkspace.shared.frontmostApplication
+        activeAssignments = settings.assignments(for: frontmostApplication)
         triggerOrigin = NSEvent.mouseLocation
         selectedSlot = nil
         isLoopActive = true
 
         let hasWindow = windowActionEngine.hasFocusedWindow()
-        indicatorService.showRadialMenu(at: triggerOrigin, selectedSlot: nil, action: nil, hasTargetWindow: hasWindow)
+        indicatorService.showRadialMenu(at: triggerOrigin, selectedSlot: nil, action: nil, assignments: activeAssignments, hasTargetWindow: hasWindow)
         mouseObserver.start(origin: triggerOrigin)
         if settings.behavior.escapeCancelsRadial {
             startEscapeMonitor()
@@ -121,7 +123,7 @@ final class SizedManager: ObservableObject {
         indicatorService.hideAll()
 
         guard confirm, let slot else { return }
-        let action = settings.assignments[slot]
+        let action = activeAssignments[slot]
         guard action.kind != .none else { return }
 
         if let frontmostApplication {
@@ -134,9 +136,9 @@ final class SizedManager: ObservableObject {
 
     private func updateSelection(_ slot: RadialMenuSlot?) {
         selectedSlot = slot
-        let action = slot.map { settings.assignments[$0] }
+        let action = slot.map { activeAssignments[$0] }
         let hasWindow = windowActionEngine.hasFocusedWindow()
-        indicatorService.updateRadialMenu(selectedSlot: slot, action: action, hasTargetWindow: hasWindow)
+        indicatorService.updateRadialMenu(selectedSlot: slot, action: action, assignments: activeAssignments, hasTargetWindow: hasWindow)
 
         if let action, let frame = windowActionEngine.targetFrame(for: action) {
             indicatorService.preview.show(frame: WindowUtility.axRectToAppKit(frame))
