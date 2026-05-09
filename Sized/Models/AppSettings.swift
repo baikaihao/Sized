@@ -239,6 +239,8 @@ struct BehaviorSettings: Codable, Equatable {
     var previewBackgroundColorHex: String
     var previewAnimationSpeed: Double
     var hapticFeedback: Bool
+    var escapeCancelsRadial: Bool
+    var rightClickCancelsRadial: Bool
 
     static let `default` = BehaviorSettings(
         confirmationMode: .release,
@@ -252,7 +254,9 @@ struct BehaviorSettings: Codable, Equatable {
         previewBorderColorHex: "#0A84FF",
         previewBackgroundColorHex: "#0A84FF",
         previewAnimationSpeed: 0.2,
-        hapticFeedback: true
+        hapticFeedback: true,
+        escapeCancelsRadial: true,
+        rightClickCancelsRadial: true
     )
 }
 
@@ -270,6 +274,8 @@ extension BehaviorSettings {
         case previewBackgroundColorHex
         case previewAnimationSpeed
         case hapticFeedback
+        case escapeCancelsRadial
+        case rightClickCancelsRadial
     }
 
     init(from decoder: Decoder) throws {
@@ -286,6 +292,8 @@ extension BehaviorSettings {
         previewBackgroundColorHex = try container.decodeIfPresent(String.self, forKey: .previewBackgroundColorHex) ?? Self.default.previewBackgroundColorHex
         previewAnimationSpeed = try container.decodeIfPresent(Double.self, forKey: .previewAnimationSpeed) ?? Self.default.previewAnimationSpeed
         hapticFeedback = try container.decodeIfPresent(Bool.self, forKey: .hapticFeedback) ?? Self.default.hapticFeedback
+        escapeCancelsRadial = try container.decodeIfPresent(Bool.self, forKey: .escapeCancelsRadial) ?? Self.default.escapeCancelsRadial
+        rightClickCancelsRadial = try container.decodeIfPresent(Bool.self, forKey: .rightClickCancelsRadial) ?? Self.default.rightClickCancelsRadial
     }
 
     func encode(to encoder: Encoder) throws {
@@ -302,6 +310,8 @@ extension BehaviorSettings {
         try container.encode(previewBackgroundColorHex, forKey: .previewBackgroundColorHex)
         try container.encode(previewAnimationSpeed, forKey: .previewAnimationSpeed)
         try container.encode(hapticFeedback, forKey: .hapticFeedback)
+        try container.encode(escapeCancelsRadial, forKey: .escapeCancelsRadial)
+        try container.encode(rightClickCancelsRadial, forKey: .rightClickCancelsRadial)
     }
 }
 
