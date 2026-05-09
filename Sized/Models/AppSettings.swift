@@ -345,8 +345,8 @@ struct AssignmentSettings: Codable, Equatable {
         case .right: RadialMenuAction(kind: .large)
         case .topLeft: RadialMenuAction(kind: .small)
         case .topRight: RadialMenuAction(kind: .wide)
-        case .bottomLeft: RadialMenuAction(kind: .mobilePortrait)
-        case .bottomRight: RadialMenuAction(kind: .tabletLandscape)
+        case .bottomLeft: RadialMenuAction(kind: .portrait405x720)
+        case .bottomRight: RadialMenuAction(kind: .threeTwo1200x800)
         case .center: RadialMenuAction(kind: .browser)
         }
     }

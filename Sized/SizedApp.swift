@@ -13,11 +13,10 @@ struct SizedApp: App {
     @StateObject private var settings = SettingsStore.shared
 
     var body: some Scene {
-        WindowGroup {
+        Settings {
             SettingsView()
                 .environmentObject(settings)
         }
-        .windowStyle(.hiddenTitleBar)
         .commands {
             CommandGroup(replacing: .appSettings) {
                 Button("设置...") {
