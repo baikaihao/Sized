@@ -26,10 +26,7 @@ final class StatusItemController {
 
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "打开 Sized", action: #selector(openSettings), keyEquivalent: ""))
-        menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "请求辅助功能权限", action: #selector(requestAccessibility), keyEquivalent: ""))
-        menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "退出", action: #selector(quit), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "退出 Sized", action: #selector(quit), keyEquivalent: "q"))
         menu.items.forEach { $0.target = self }
         item.menu = menu
         statusItem = item
@@ -43,10 +40,6 @@ final class StatusItemController {
 
     @objc private func openSettings() {
         SizedManager.shared.openSettings()
-    }
-
-    @objc private func requestAccessibility() {
-        AccessibilityManager.shared.requestAccess()
     }
 
     @objc private func quit() {
