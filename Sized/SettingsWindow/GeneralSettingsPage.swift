@@ -34,9 +34,6 @@ struct GeneralSettingsPage: View {
 
                     Toggle("在菜单栏中显示图标", isOn: $settings.general.showMenuBarIcon)
                     Toggle("隐藏 Dock 图标", isOn: $settings.general.hideDockIcon)
-                    Label("隐藏 Dock 图标需要重新启动应用后完全生效。", systemImage: "info.circle")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
                 }
 
                 SettingsSection(title: "辅助功能权限", systemImage: "accessibility") {
@@ -87,7 +84,7 @@ struct GeneralSettingsPage: View {
                     
                     SliderRow(title: "触发延迟", value: $settings.trigger.triggerDelayMilliseconds, range: 0...500, step: 10, suffix: "ms")
                     Toggle("双击触发键激活轮盘", isOn: $settings.trigger.doubleTapTrigger)
-                    Toggle("鼠标中键触发轮盘", isOn: $settings.trigger.middleClickTrigger)
+                    Toggle("鼠标中键激活轮盘", isOn: $settings.trigger.middleClickTrigger)
                 }
 
                 SettingsSection(title: "行为设置", systemImage: "cursorarrow.motionlines") {

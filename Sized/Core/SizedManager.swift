@@ -82,8 +82,7 @@ final class SizedManager: ObservableObject {
     }
 
     func openSettings() {
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.windows.first?.makeKeyAndOrderFront(nil)
+        SettingsWindowController.shared.show()
     }
 
     private func beginLoop() {
