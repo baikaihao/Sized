@@ -28,6 +28,7 @@ final class SizedManager: ObservableObject {
     }()
 
     private var escapeMonitor: ActiveEventMonitor?
+    private var rightClickCancelMonitor: ActiveEventMonitor?
     private var cancellables = Set<AnyCancellable>()
     private var isLoopActive = false
     private var triggerOrigin = CGPoint.zero
@@ -66,6 +67,7 @@ final class SizedManager: ObservableObject {
         stopEventTriggers()
         mouseObserver.stop()
         stopEscapeMonitor()
+        stopRightClickCancelMonitor()
         indicatorService.hideAll()
         AccessibilityManager.shared.stopAutoRefresh()
     }
@@ -101,7 +103,12 @@ final class SizedManager: ObservableObject {
         let hasWindow = windowActionEngine.hasFocusedWindow()
         indicatorService.showRadialMenu(at: triggerOrigin, selectedSlot: nil, action: nil, hasTargetWindow: hasWindow)
         mouseObserver.start(origin: triggerOrigin)
-        startEscapeMonitor()
+        if settings.behavior.escapeCancelsRadial {
+            startEscapeMonitor()
+        }
+        if settings.behavior.rightClickCancelsRadial {
+            startRightClickCancelMonitor()
+        }
     }
 
     private func endLoop(confirm: Bool) {
@@ -111,6 +118,7 @@ final class SizedManager: ObservableObject {
         isLoopActive = false
         mouseObserver.stop()
         stopEscapeMonitor()
+        stopRightClickCancelMonitor()
         indicatorService.hideAll()
 
         guard confirm, let slot else { return }
@@ -184,6 +192,29 @@ final class SizedManager: ObservableObject {
     private func stopEscapeMonitor() {
         escapeMonitor?.stop()
         escapeMonitor = nil
+    }
+
+    private func startRightClickCancelMonitor() {
+        stopRightClickCancelMonitor()
+
+        let mask = 1 << CGEventType.rightMouseDown.rawValue
+        let monitor = ActiveEventMonitor(mask: CGEventMask(mask)) { [weak self] type, event in
+            guard type == .rightMouseDown else { return .forward }
+            Task { @MainActor in
+                self?.endLoop(confirm: false)
+            }
+            return .forward
+        }
+
+        rightClickCancelMonitor = monitor
+        if !monitor.start() {
+            rightClickCancelMonitor = nil
+        }
+    }
+
+    private func stopRightClickCancelMonitor() {
+        rightClickCancelMonitor?.stop()
+        rightClickCancelMonitor = nil
     }
 }
 

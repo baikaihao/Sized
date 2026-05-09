@@ -15,6 +15,7 @@ final class KeybindTrigger {
     private var monitor: ActiveEventMonitor?
     private var isTriggerDown = false
     private var currentOptionKeycode: Int64 = 0
+    private var currentTriggerKeycode: Int64 = 0
     private var pendingWorkItem: DispatchWorkItem?
     private var lastTriggerDate: Date?
     private var settings: SettingsStore { .shared }
@@ -27,7 +28,7 @@ final class KeybindTrigger {
 
     func start() {
         guard monitor == nil else { return }
-        let mask = (1 << CGEventType.flagsChanged.rawValue) | (1 << CGEventType.keyDown.rawValue)
+        let mask = (1 << CGEventType.flagsChanged.rawValue) | (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
         let monitor = ActiveEventMonitor(mask: CGEventMask(mask)) { [weak self] type, event in
             DispatchQueue.main.async {
                 self?.handle(type: type, event: event)
@@ -48,79 +49,107 @@ final class KeybindTrigger {
         monitor = nil
         isTriggerDown = false
         currentOptionKeycode = 0
+        currentTriggerKeycode = 0
     }
 
     private func handle(type: CGEventType, event: CGEvent) {
         if type == .keyDown {
             let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
-            
-            if keyCode == 53, isTriggerDown {
+
+            if keyCode == 53, isTriggerDown, settings.behavior.escapeCancelsRadial {
                 delegate?.triggerDidCancel()
                 isTriggerDown = false
                 return
             }
-            
+
             if !settings.trigger.useOptionAsTrigger {
                 let keybinding = parseKeybinding(settings.trigger.triggerKeyDisplayName)
                 let eventModifiers = event.flags.intersection([.maskCommand, .maskShift, .maskControl, .maskAlternate])
-                
-                if keybinding.isValid && 
-                   keyCode == keybinding.keyCode && 
+
+                if keybinding.isValid &&
+                   keyCode == keybinding.keyCode &&
                    eventModifiers == keybinding.modifiers &&
                    !isTriggerDown {
+                    currentTriggerKeycode = Int64(keyCode)
                     beginTrigger()
                     return
                 }
-                
+
                 if !isTriggerDown { return }
-                
+
                 if keyCode == keybinding.keyCode && eventModifiers == keybinding.modifiers {
                     return
                 } else {
                     pendingWorkItem?.cancel()
                     pendingWorkItem = nil
                     isTriggerDown = false
+                    currentTriggerKeycode = 0
                     delegate?.triggerDidEnd(confirm: true)
                 }
             }
             return
         }
 
+        if type == .keyUp {
+            guard isTriggerDown, !settings.trigger.useOptionAsTrigger else { return }
+            let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+            if Int64(keyCode) == currentTriggerKeycode {
+                pendingWorkItem?.cancel()
+                pendingWorkItem = nil
+                isTriggerDown = false
+                currentTriggerKeycode = 0
+                delegate?.triggerDidEnd(confirm: true)
+            }
+            return
+        }
+
         guard type == .flagsChanged else { return }
-        
-        guard settings.trigger.useOptionAsTrigger else { return }
-        
+
         let flags = event.flags
         let optionDown = flags.contains(.maskAlternate)
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
         let isLeftOption = keyCode == 58
         let isRightOption = keyCode == 61
 
-        let side = settings.trigger.optionSide
-        let matchesSide: Bool
-        if optionDown {
-            switch side {
-            case .left:  matchesSide = isLeftOption
-            case .right: matchesSide = isRightOption
-            case .both:  matchesSide = isLeftOption || isRightOption
+        if settings.trigger.useOptionAsTrigger {
+            let side = settings.trigger.optionSide
+            let matchesSide: Bool
+            if optionDown {
+                switch side {
+                case .left:  matchesSide = isLeftOption
+                case .right: matchesSide = isRightOption
+                case .both:  matchesSide = isLeftOption || isRightOption
+                }
+            } else {
+                switch side {
+                case .left:  matchesSide = currentOptionKeycode == 58
+                case .right: matchesSide = currentOptionKeycode == 61
+                case .both:  matchesSide = currentOptionKeycode == 58 || currentOptionKeycode == 61
+                }
             }
-        } else {
-            switch side {
-            case .left:  matchesSide = currentOptionKeycode == 58
-            case .right: matchesSide = currentOptionKeycode == 61
-            case .both:  matchesSide = currentOptionKeycode == 58 || currentOptionKeycode == 61
-            }
-        }
 
-        if optionDown && matchesSide && !isTriggerDown {
-            currentOptionKeycode = keyCode
-            beginTrigger()
-        } else if !optionDown && matchesSide && isTriggerDown {
-            currentOptionKeycode = 0
-            pendingWorkItem?.cancel()
-            pendingWorkItem = nil
-            isTriggerDown = false
-            delegate?.triggerDidEnd(confirm: true)
+            if optionDown && matchesSide && !isTriggerDown {
+                currentOptionKeycode = keyCode
+                beginTrigger()
+            } else if !optionDown && matchesSide && isTriggerDown {
+                currentOptionKeycode = 0
+                pendingWorkItem?.cancel()
+                pendingWorkItem = nil
+                isTriggerDown = false
+                delegate?.triggerDidEnd(confirm: true)
+            }
+        } else if isTriggerDown {
+            let keybinding = parseKeybinding(settings.trigger.triggerKeyDisplayName)
+            guard keybinding.isValid else { return }
+            let triggerModifiers = keybinding.modifiers
+            let currentModifiers = flags.intersection([.maskCommand, .maskShift, .maskControl, .maskAlternate])
+            if !triggerModifiers.isEmpty && currentModifiers.intersection(triggerModifiers).isEmpty {
+                pendingWorkItem?.cancel()
+                pendingWorkItem = nil
+                isTriggerDown = false
+                currentTriggerKeycode = 0
+                delegate?.triggerDidEnd(confirm: true)
+            }
         }
     }
     

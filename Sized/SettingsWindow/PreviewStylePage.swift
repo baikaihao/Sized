@@ -37,6 +37,11 @@ struct PreviewStylePage: View {
                     SettingsSection(title: "动画", systemImage: "sparkles") {
                         SliderRowDecimal(title: "过渡速度", value: $settings.behavior.previewAnimationSpeed, range: 0.05...0.5, step: 0.05, suffix: "秒")
                     }
+
+                    SettingsSection(title: "取消方式", systemImage: "xmark.circle") {
+                        Toggle("ESC 键取消轮盘", isOn: $settings.behavior.escapeCancelsRadial)
+                        Toggle("鼠标右键取消轮盘", isOn: $settings.behavior.rightClickCancelsRadial)
+                    }
                 }
             }
             .padding(32)
