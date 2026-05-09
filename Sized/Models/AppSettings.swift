@@ -9,8 +9,8 @@ enum AccentColorMode: String, CaseIterable, Codable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .system: "系统"
-        case .custom: "自定义"
+        case .system: "系统".localized
+        case .custom: "自定义".localized
         }
     }
 }
@@ -24,9 +24,9 @@ enum RadialAnimationStyle: String, CaseIterable, Codable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .none: "无动画"
-        case .smooth: "平滑"
-        case .spring: "弹性"
+        case .none: "无动画".localized
+        case .smooth: "平滑".localized
+        case .spring: "弹性".localized
         }
     }
 }
@@ -39,8 +39,8 @@ enum ConfirmationMode: String, CaseIterable, Codable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .release: "松开触发键"
-        case .click: "点击确认"
+        case .release: "松开触发键".localized
+        case .click: "点击确认".localized
         }
     }
 }
@@ -53,8 +53,8 @@ enum ResizeAnchor: String, CaseIterable, Codable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .currentCenter: "保持当前中心"
-        case .topLeft: "保持左上角"
+        case .currentCenter: "保持当前中心".localized
+        case .topLeft: "保持左上角".localized
         }
     }
 }
@@ -165,9 +165,9 @@ enum OptionSide: String, CaseIterable, Codable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .left: "左侧 Option"
-        case .right: "右侧 Option"
-        case .both: "两侧 Option"
+        case .left: "左侧 Option".localized
+        case .right: "右侧 Option".localized
+        case .both: "两侧 Option".localized
         }
     }
 }
@@ -352,18 +352,100 @@ struct AssignmentSettings: Codable, Equatable {
     }
 }
 
+struct AppRule: Codable, Equatable, Identifiable {
+    var id: UUID
+    var appName: String
+    var bundleIdentifier: String
+    var isEnabled: Bool
+    var assignments: AssignmentSettings
+
+    init(
+        id: UUID = UUID(),
+        appName: String,
+        bundleIdentifier: String,
+        isEnabled: Bool = true,
+        assignments: AssignmentSettings = .default
+    ) {
+        self.id = id
+        self.appName = appName
+        self.bundleIdentifier = bundleIdentifier
+        self.isEnabled = isEnabled
+        self.assignments = assignments
+    }
+}
+
+struct AppRuleSettings: Codable, Equatable {
+    var isEnabled: Bool
+    var rules: [AppRule]
+
+    static let `default` = AppRuleSettings(isEnabled: true, rules: [])
+
+    func matchingRule(for bundleIdentifier: String?) -> AppRule? {
+        guard isEnabled, let bundleIdentifier, !bundleIdentifier.isEmpty else { return nil }
+        return rules.first { rule in
+            rule.isEnabled && rule.bundleIdentifier == bundleIdentifier
+        }
+    }
+
+    func assignments(for bundleIdentifier: String?, fallback: AssignmentSettings) -> AssignmentSettings {
+        matchingRule(for: bundleIdentifier)?.assignments ?? fallback
+    }
+}
+
 struct AppSettingsSnapshot: Codable, Equatable {
     var wheelStyle: WheelStyleSettings
     var assignments: AssignmentSettings
+    var appRules: AppRuleSettings
     var trigger: TriggerSettings
     var behavior: BehaviorSettings
     var general: GeneralSettings
 
-    static let `default` = AppSettingsSnapshot(
-        wheelStyle: .default,
-        assignments: .default,
-        trigger: .default,
-        behavior: .default,
-        general: .default
-    )
+    static let `default` = AppSettingsSnapshot()
+
+    init(
+        wheelStyle: WheelStyleSettings = .default,
+        assignments: AssignmentSettings = .default,
+        appRules: AppRuleSettings = .default,
+        trigger: TriggerSettings = .default,
+        behavior: BehaviorSettings = .default,
+        general: GeneralSettings = .default
+    ) {
+        self.wheelStyle = wheelStyle
+        self.assignments = assignments
+        self.appRules = appRules
+        self.trigger = trigger
+        self.behavior = behavior
+        self.general = general
+    }
+}
+
+extension AppSettingsSnapshot {
+    private enum CodingKeys: String, CodingKey {
+        case wheelStyle
+        case assignments
+        case appRules
+        case trigger
+        case behavior
+        case general
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        wheelStyle = try container.decodeIfPresent(WheelStyleSettings.self, forKey: .wheelStyle) ?? Self.default.wheelStyle
+        assignments = try container.decodeIfPresent(AssignmentSettings.self, forKey: .assignments) ?? Self.default.assignments
+        appRules = try container.decodeIfPresent(AppRuleSettings.self, forKey: .appRules) ?? Self.default.appRules
+        trigger = try container.decodeIfPresent(TriggerSettings.self, forKey: .trigger) ?? Self.default.trigger
+        behavior = try container.decodeIfPresent(BehaviorSettings.self, forKey: .behavior) ?? Self.default.behavior
+        general = try container.decodeIfPresent(GeneralSettings.self, forKey: .general) ?? Self.default.general
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(wheelStyle, forKey: .wheelStyle)
+        try container.encode(assignments, forKey: .assignments)
+        try container.encode(appRules, forKey: .appRules)
+        try container.encode(trigger, forKey: .trigger)
+        try container.encode(behavior, forKey: .behavior)
+        try container.encode(general, forKey: .general)
+    }
 }

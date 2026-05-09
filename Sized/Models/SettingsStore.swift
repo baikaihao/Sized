@@ -1,4 +1,5 @@
 import Combine
+import AppKit
 import Foundation
 import SwiftUI
 
@@ -11,6 +12,10 @@ final class SettingsStore: ObservableObject {
     }
 
     @Published var assignments: AssignmentSettings {
+        didSet { persist() }
+    }
+
+    @Published var appRules: AppRuleSettings {
         didSet { persist() }
     }
 
@@ -45,6 +50,7 @@ final class SettingsStore: ObservableObject {
 
         wheelStyle = snapshot.wheelStyle
         assignments = snapshot.assignments
+        appRules = snapshot.appRules
         trigger = snapshot.trigger
         behavior = snapshot.behavior
         general = snapshot.general
@@ -54,6 +60,7 @@ final class SettingsStore: ObservableObject {
         AppSettingsSnapshot(
             wheelStyle: wheelStyle,
             assignments: assignments,
+            appRules: appRules,
             trigger: trigger,
             behavior: behavior,
             general: general
@@ -65,6 +72,7 @@ final class SettingsStore: ObservableObject {
         isLoading = true
         wheelStyle = defaults.wheelStyle
         assignments = defaults.assignments
+        appRules = defaults.appRules
         trigger = defaults.trigger
         behavior = defaults.behavior
         general = defaults.general
@@ -74,6 +82,10 @@ final class SettingsStore: ObservableObject {
 
     func resetAssignments() {
         assignments = .default
+    }
+
+    func assignments(for application: NSRunningApplication?) -> AssignmentSettings {
+        appRules.assignments(for: application?.bundleIdentifier, fallback: assignments)
     }
 
     func exportJSON() throws -> String {
@@ -89,6 +101,7 @@ final class SettingsStore: ObservableObject {
         isLoading = true
         wheelStyle = decoded.wheelStyle
         assignments = decoded.assignments
+        appRules = decoded.appRules
         trigger = decoded.trigger
         behavior = decoded.behavior
         general = decoded.general

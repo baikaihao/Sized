@@ -29,6 +29,7 @@ struct WheelStylePage: View {
                     WheelPreviewPanel(
                         selectedSlot: $previewSlot,
                         action: previewSlot.map { settings.assignments[$0] },
+                        assignments: settings.assignments,
                         style: settings.wheelStyle
                     )
 
@@ -66,6 +67,7 @@ struct WheelStylePage: View {
 struct WheelPreviewPanel: View {
     @Binding var selectedSlot: RadialMenuSlot?
     var action: RadialMenuAction?
+    var assignments: AssignmentSettings
     var style: WheelStyleSettings
 
     var body: some View {
@@ -75,6 +77,7 @@ struct WheelPreviewPanel: View {
                     RadialMenuView(
                         selectedSlot: selectedSlot,
                         action: action,
+                        assignments: assignments,
                         style: style,
                         hasTargetWindow: true,
                         isShown: true,
@@ -93,7 +96,7 @@ struct WheelPreviewPanel: View {
                 }
                 .pickerStyle(.menu)
 
-                Text(selectedSlot == nil ? "未选择" : action?.displayName ?? "未选择")
+                Text(selectedSlot == nil ? "未选择".localized : action?.displayName ?? "未选择".localized)
                     .font(.headline)
                     .frame(maxWidth: .infinity)
             }
@@ -107,9 +110,9 @@ struct PageHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title)
+            Text(title.localized)
                 .font(.system(size: 30, weight: .semibold))
-            Text(subtitle)
+            Text(subtitle.localized)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -123,7 +126,7 @@ struct SettingsSection<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Label(title, systemImage: systemImage)
+            Label(title.localized, systemImage: systemImage)
                 .font(.headline)
 
             VStack(alignment: .leading, spacing: 12) {
@@ -153,9 +156,9 @@ struct SliderRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(title)
+                Text(title.localized)
                 Spacer()
-                Text("\(Int(value))\(suffix)")
+                Text("\(Int(value))\(suffix.localized)")
                     .font(.callout.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
@@ -175,9 +178,9 @@ struct SliderRowDecimal: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(title)
+                Text(title.localized)
                 Spacer()
-                Text(String(format: "\(format)\(suffix)", value))
+                Text(String(format: "\(format)\(suffix.localized)", value))
                     .font(.callout.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
@@ -192,7 +195,7 @@ struct PickerRow<Value: Hashable & CaseIterable & Identifiable>: View where Valu
 
     var body: some View {
         HStack {
-            Text(title)
+            Text(title.localized)
             Spacer()
             Picker(title, selection: $selection) {
                 ForEach(Array(Value.allCases)) { value in

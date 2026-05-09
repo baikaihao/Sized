@@ -9,12 +9,12 @@ struct RadialMenuView: View {
 
     var selectedSlot: RadialMenuSlot?
     var action: RadialMenuAction?
+    var assignments: AssignmentSettings
     var style: WheelStyleSettings
     var hasTargetWindow: Bool
     var isShown: Bool
     var isPreview: Bool = false
 
-    @EnvironmentObject private var settings: SettingsStore
     @Environment(\.colorScheme) private var colorScheme
 
     private var ringSize: CGFloat { CGFloat(style.size) }
@@ -82,7 +82,7 @@ struct RadialMenuView: View {
         ZStack {
             ForEach(RadialMenuSlot.directional) { slot in
                 let isSelected = selectedSlot == slot
-                Text(compactLabel(for: settings.assignments[slot]))
+                Text(compactLabel(for: assignments[slot]))
                     .font(.system(size: labelFontSize, weight: isSelected ? .semibold : .medium, design: .rounded))
                     .monospacedDigit()
                     .lineLimit(1)
@@ -172,14 +172,14 @@ struct RadialMenuView: View {
     }
 
     private var accessibilityLabel: String {
-        if !hasTargetWindow { return "没有可调整的窗口" }
-        if let action { return "选中 \(action.displayName)" }
-        return "轮盘"
+        if !hasTargetWindow { return "没有可调整的窗口".localized }
+        if let action { return "选中 %@".localizedFormat(action.displayName) }
+        return "轮盘".localized
     }
 
     private var centerLabel: String {
-        guard hasTargetWindow else { return "无窗口" }
-        return compactLabel(for: action ?? settings.assignments[.center])
+        guard hasTargetWindow else { return "无窗口".localized }
+        return compactLabel(for: action ?? assignments[.center])
     }
 
     private var labelWidth: CGFloat {
@@ -218,11 +218,11 @@ struct RadialMenuView: View {
 
         switch action.kind {
         case .restoreInitial:
-            return "恢复"
+            return "恢复".localized
         case .undo:
-            return "撤销"
+            return "撤销".localized
         case .none:
-            return "无"
+            return "无".localized
         default:
             return action.displayName
         }
