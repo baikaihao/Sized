@@ -1,10 +1,12 @@
 import AppKit
 import ApplicationServices
+import OSLog
 
 @MainActor
 final class WindowActionEngine {
     static let shared = WindowActionEngine()
 
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Sized", category: "WindowResize")
     private var resizeContext = ResizeContext()
     private var resizeAnimationTask: Task<Void, Never>?
     private let resizeAnimationDuration: TimeInterval = 0.16
@@ -116,11 +118,17 @@ final class WindowActionEngine {
         guard SettingsStore.shared.behavior.resizeAnimation,
               !framesAreClose(currentFrame, targetFrame)
         else {
-            return WindowUtility.setFrame(targetFrame, for: window)
+            let result = WindowUtility.setFrameDetailed(targetFrame, for: window)
+            log(result, phase: "direct")
+            return result.isSuccessful
         }
 
         let startFrame = currentFrame.integral
-        guard WindowUtility.setFrame(startFrame, for: window) else { return false }
+        let initialResult = WindowUtility.setFrameDetailed(startFrame, for: window)
+        guard initialResult.isSuccessful else {
+            log(initialResult, phase: "animated-start")
+            return false
+        }
 
         resizeAnimationTask = Task { @MainActor [weak self] in
             guard let self else { return }
@@ -138,12 +146,13 @@ final class WindowActionEngine {
             let progress = CGFloat(frameIndex) / CGFloat(frameCount)
             let easedProgress = easeOutCubic(progress)
             let frame = interpolate(from: startFrame, to: targetFrame, progress: easedProgress).integral
-            _ = WindowUtility.setFrame(frame, for: window)
+            _ = WindowUtility.setFrameDetailed(frame, for: window)
             try? await Task.sleep(nanoseconds: frameDelay)
         }
 
         if !Task.isCancelled {
-            _ = WindowUtility.setFrame(targetFrame.integral, for: window)
+            let result = WindowUtility.setFrameDetailed(targetFrame.integral, for: window)
+            log(result, phase: "animated-final")
         }
     }
 
@@ -165,5 +174,14 @@ final class WindowActionEngine {
             abs(lhs.minY - rhs.minY) < 1 &&
             abs(lhs.width - rhs.width) < 1 &&
             abs(lhs.height - rhs.height) < 1
+    }
+
+    private func log(_ result: WindowResizeResult, phase: String) {
+        guard SettingsStore.shared.behavior.resizeDiagnostics || !result.isSuccessful else { return }
+        if result.isSuccessful {
+            logger.info("Resize \(phase, privacy: .public) succeeded: \(result.diagnosticDescription, privacy: .public)")
+        } else {
+            logger.error("Resize \(phase, privacy: .public) failed: \(result.diagnosticDescription, privacy: .public)")
+        }
     }
 }

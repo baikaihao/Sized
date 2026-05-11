@@ -93,6 +93,7 @@ struct GeneralSettingsPage: View {
                     PickerRow(title: "改尺寸锚点", selection: $settings.behavior.resizeAnchor)
                     Toggle("忽略全屏窗口", isOn: $settings.behavior.ignoreFullScreenWindows)
                     Toggle("触觉反馈", isOn: $settings.behavior.hapticFeedback)
+                    Toggle("窗口调整诊断日志", isOn: $settings.behavior.resizeDiagnostics)
                 }
 
                 SettingsSection(title: "重置与支持", systemImage: "questionmark.circle") {

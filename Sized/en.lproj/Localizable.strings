@@ -112,6 +112,7 @@
 "改尺寸锚点" = "Resize anchor";
 "忽略全屏窗口" = "Ignore full-screen windows";
 "触觉反馈" = "Haptic feedback";
+"窗口调整诊断日志" = "Window resize diagnostic logs";
 "重置与支持" = "Reset & Support";
 "重置所有设置" = "Reset All Settings";
 "确定要重置所有设置吗？" = "Are you sure you want to reset all settings?";

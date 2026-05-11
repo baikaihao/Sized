@@ -241,6 +241,7 @@ struct BehaviorSettings: Codable, Equatable {
     var hapticFeedback: Bool
     var escapeCancelsRadial: Bool
     var rightClickCancelsRadial: Bool
+    var resizeDiagnostics: Bool
 
     static let `default` = BehaviorSettings(
         confirmationMode: .release,
@@ -256,7 +257,8 @@ struct BehaviorSettings: Codable, Equatable {
         previewAnimationSpeed: 0.2,
         hapticFeedback: true,
         escapeCancelsRadial: true,
-        rightClickCancelsRadial: true
+        rightClickCancelsRadial: true,
+        resizeDiagnostics: false
     )
 }
 
@@ -276,6 +278,7 @@ extension BehaviorSettings {
         case hapticFeedback
         case escapeCancelsRadial
         case rightClickCancelsRadial
+        case resizeDiagnostics
     }
 
     init(from decoder: Decoder) throws {
@@ -294,6 +297,7 @@ extension BehaviorSettings {
         hapticFeedback = try container.decodeIfPresent(Bool.self, forKey: .hapticFeedback) ?? Self.default.hapticFeedback
         escapeCancelsRadial = try container.decodeIfPresent(Bool.self, forKey: .escapeCancelsRadial) ?? Self.default.escapeCancelsRadial
         rightClickCancelsRadial = try container.decodeIfPresent(Bool.self, forKey: .rightClickCancelsRadial) ?? Self.default.rightClickCancelsRadial
+        resizeDiagnostics = try container.decodeIfPresent(Bool.self, forKey: .resizeDiagnostics) ?? Self.default.resizeDiagnostics
     }
 
     func encode(to encoder: Encoder) throws {
@@ -312,6 +316,7 @@ extension BehaviorSettings {
         try container.encode(hapticFeedback, forKey: .hapticFeedback)
         try container.encode(escapeCancelsRadial, forKey: .escapeCancelsRadial)
         try container.encode(rightClickCancelsRadial, forKey: .rightClickCancelsRadial)
+        try container.encode(resizeDiagnostics, forKey: .resizeDiagnostics)
     }
 }
 
