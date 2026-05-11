@@ -6,6 +6,9 @@ final class WindowActionEngine {
     static let shared = WindowActionEngine()
 
     private var resizeContext = ResizeContext()
+    private var resizeAnimationTask: Task<Void, Never>?
+    private let resizeAnimationDuration: TimeInterval = 0.16
+    private let resizeAnimationFrameRate: Double = 60
 
     private init() {}
 
@@ -35,15 +38,15 @@ final class WindowActionEngine {
         case .restoreInitial:
             guard let initialFrame = resizeContext.initialFrame else { return false }
             resizeContext.lastFrame = currentFrame
-            return WindowUtility.setFrame(initialFrame, for: focusedWindow.windowElement)
+            return applyFrame(initialFrame, from: currentFrame, to: focusedWindow.windowElement)
         case .undo:
             guard let lastFrame = resizeContext.lastFrame else { return false }
             resizeContext.lastFrame = currentFrame
-            return WindowUtility.setFrame(lastFrame, for: focusedWindow.windowElement)
+            return applyFrame(lastFrame, from: currentFrame, to: focusedWindow.windowElement)
         default:
             guard let targetFrame = targetFrame(for: action, focusedWindow: focusedWindow) else { return false }
             resizeContext.remember(pid: focusedWindow.application.processIdentifier, frame: currentFrame)
-            return WindowUtility.setFrame(targetFrame.integral, for: focusedWindow.windowElement)
+            return applyFrame(targetFrame.integral, from: currentFrame, to: focusedWindow.windowElement)
         }
     }
 
@@ -104,5 +107,63 @@ final class WindowActionEngine {
         }
 
         return result
+    }
+
+    private func applyFrame(_ targetFrame: CGRect, from currentFrame: CGRect, to window: AXUIElement) -> Bool {
+        let targetFrame = targetFrame.integral
+        resizeAnimationTask?.cancel()
+
+        guard SettingsStore.shared.behavior.resizeAnimation,
+              !framesAreClose(currentFrame, targetFrame)
+        else {
+            return WindowUtility.setFrame(targetFrame, for: window)
+        }
+
+        let startFrame = currentFrame.integral
+        guard WindowUtility.setFrame(startFrame, for: window) else { return false }
+
+        resizeAnimationTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            await self.animateFrameChange(from: startFrame, to: targetFrame, for: window)
+        }
+        return true
+    }
+
+    private func animateFrameChange(from startFrame: CGRect, to targetFrame: CGRect, for window: AXUIElement) async {
+        let frameCount = max(1, Int(resizeAnimationDuration * resizeAnimationFrameRate))
+        let frameDelay = UInt64(1_000_000_000 / resizeAnimationFrameRate)
+
+        for frameIndex in 1...frameCount {
+            if Task.isCancelled { return }
+            let progress = CGFloat(frameIndex) / CGFloat(frameCount)
+            let easedProgress = easeOutCubic(progress)
+            let frame = interpolate(from: startFrame, to: targetFrame, progress: easedProgress).integral
+            _ = WindowUtility.setFrame(frame, for: window)
+            try? await Task.sleep(nanoseconds: frameDelay)
+        }
+
+        if !Task.isCancelled {
+            _ = WindowUtility.setFrame(targetFrame.integral, for: window)
+        }
+    }
+
+    private func interpolate(from startFrame: CGRect, to targetFrame: CGRect, progress: CGFloat) -> CGRect {
+        CGRect(
+            x: startFrame.minX + (targetFrame.minX - startFrame.minX) * progress,
+            y: startFrame.minY + (targetFrame.minY - startFrame.minY) * progress,
+            width: startFrame.width + (targetFrame.width - startFrame.width) * progress,
+            height: startFrame.height + (targetFrame.height - startFrame.height) * progress
+        )
+    }
+
+    private func easeOutCubic(_ progress: CGFloat) -> CGFloat {
+        1 - pow(1 - progress, 3)
+    }
+
+    private func framesAreClose(_ lhs: CGRect, _ rhs: CGRect) -> Bool {
+        abs(lhs.minX - rhs.minX) < 1 &&
+            abs(lhs.minY - rhs.minY) < 1 &&
+            abs(lhs.width - rhs.width) < 1 &&
+            abs(lhs.height - rhs.height) < 1
     }
 }
