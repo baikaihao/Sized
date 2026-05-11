@@ -312,158 +312,111 @@
       <span class="desc">两个窗口叠放，小窗口 → 大窗口<br>直观表达「窗口缩放」功能</span>
     </div>
 
-    <!-- Design 2: Window with Double-headed Arrows -->
+    <!-- Design 1 Light: Liquid Glass Cover -->
     <div class="icon-card">
-      <div class="icon-frame">
-        <svg width="256" height="256" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <div class="icon-frame light-bg">
+        <svg width="280" height="280" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#18181b"/>
-              <stop offset="100%" stop-color="#09090b"/>
+            <linearGradient id="lg-bg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#F8FCFF"/>
+              <stop offset="45%" stop-color="#EAF6FF"/>
+              <stop offset="100%" stop-color="#DDEAFF"/>
             </linearGradient>
-            <radialGradient id="glow2" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.12"/>
-              <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
+            <linearGradient id="lg-surface" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.92"/>
+              <stop offset="48%" stop-color="#F7FCFF" stop-opacity="0.62"/>
+              <stop offset="100%" stop-color="#DDEBFF" stop-opacity="0.38"/>
+            </linearGradient>
+            <linearGradient id="lg-panel" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.82"/>
+              <stop offset="42%" stop-color="#EEF8FF" stop-opacity="0.48"/>
+              <stop offset="100%" stop-color="#C8D9FF" stop-opacity="0.32"/>
+            </linearGradient>
+            <linearGradient id="lg-chrome" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.82"/>
+              <stop offset="50%" stop-color="#EAF7FF" stop-opacity="0.52"/>
+              <stop offset="100%" stop-color="#CADBFF" stop-opacity="0.38"/>
+            </linearGradient>
+            <linearGradient id="lg-accent" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#A78BFA"/>
+              <stop offset="100%" stop-color="#8B5CF6"/>
+            </linearGradient>
+            <radialGradient id="lg-depth" cx="42%" cy="28%" r="62%">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+              <stop offset="52%" stop-color="#BDEFFF" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="#7C5CFF" stop-opacity="0"/>
             </radialGradient>
-            <filter id="shadow2" x="-15%" y="-15%" width="130%" height="130%">
-              <feDropShadow dx="0" dy="6" stdDeviation="14" flood-color="rgba(139,92,246,0.3)"/>
+            <filter id="lg-card-shadow" x="-20%" y="-20%" width="140%" height="150%">
+              <feDropShadow dx="0" dy="18" stdDeviation="28" flood-color="#3570B8" flood-opacity="0.22"/>
+              <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#FFFFFF" flood-opacity="0.75"/>
             </filter>
-            <clipPath id="clip2">
+            <filter id="lg-window-shadow" x="-18%" y="-18%" width="136%" height="150%">
+              <feDropShadow dx="0" dy="15" stdDeviation="22" flood-color="#3D6EB4" flood-opacity="0.2"/>
+              <feDropShadow dx="0" dy="-1" stdDeviation="2" flood-color="#FFFFFF" flood-opacity="0.8"/>
+            </filter>
+            <filter id="lg-soft-blur" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="22"/>
+            </filter>
+            <clipPath id="lg-clip">
               <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224"/>
             </clipPath>
           </defs>
 
-          <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bg2)"/>
-          <circle cx="512" cy="512" r="450" fill="url(#glow2)" clip-path="url(#clip2)"/>
-
-          <!-- Main window -->
-          <g filter="url(#shadow2)">
-            <rect x="260" y="280" width="504" height="420" rx="22" ry="22" fill="#27272a" stroke="rgba(255,255,255,0.16)" stroke-width="3"/>
-            <rect x="260" y="280" width="504" height="48" rx="22" ry="22" fill="#3f3f46"/>
-            <rect x="260" y="304" width="504" height="24" fill="#3f3f46"/>
-            <circle cx="298" cy="304" r="6.5" fill="#FF6058"/>
-            <circle cx="320" cy="304" r="6.5" fill="#FFBD2E"/>
-            <circle cx="342" cy="304" r="6.5" fill="#28CA42"/>
-
-            <rect x="310" y="370" width="260" height="10" rx="5" fill="rgba(255,255,255,0.08)"/>
-            <rect x="310" y="395" width="180" height="10" rx="5" fill="rgba(255,255,255,0.05)"/>
-            <rect x="310" y="430" width="404" height="220" rx="10" ry="10" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
+          <rect width="1024" height="1024" rx="224" ry="224" fill="url(#lg-bg)"/>
+          <g clip-path="url(#lg-clip)">
+            <path d="M-80 260 C150 88 310 160 484 76 C690 -24 840 58 1120 -30 L1120 310 C905 388 746 336 560 424 C338 530 140 480 -80 654 Z" fill="#FFFFFF" opacity="0.44" filter="url(#lg-soft-blur)"/>
+            <path d="M-60 790 C172 636 342 700 526 602 C720 498 858 566 1110 450 L1110 1100 L-60 1100 Z" fill="#8DEBFF" opacity="0.2" filter="url(#lg-soft-blur)"/>
+            <circle cx="512" cy="384" r="520" fill="url(#lg-depth)"/>
           </g>
 
-          <!-- Double-headed horizontal arrows -->
-          <g opacity="0.85">
-            <!-- Left arrow -->
-            <line x1="170" y1="490" x2="240" y2="490" stroke="#A78BFA" stroke-width="5" stroke-linecap="round"/>
-            <path d="M182 478 L168 490 L182 502" fill="none" stroke="#A78BFA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- Right arrow -->
-            <line x1="784" y1="490" x2="854" y2="490" stroke="#A78BFA" stroke-width="5" stroke-linecap="round"/>
-            <path d="M842 478 L856 490 L842 502" fill="none" stroke="#A78BFA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Glass background window -->
+          <g filter="url(#lg-card-shadow)" opacity="0.78">
+            <rect x="126" y="172" width="486" height="376" rx="42" ry="42" fill="url(#lg-panel)" stroke="rgba(255,255,255,0.78)" stroke-width="3"/>
+            <rect x="126" y="172" width="486" height="66" rx="42" ry="42" fill="url(#lg-chrome)"/>
+            <rect x="126" y="207" width="486" height="31" fill="rgba(255,255,255,0.36)"/>
+            <circle cx="176" cy="205" r="9" fill="#FF6B67"/>
+            <circle cx="207" cy="205" r="9" fill="#FFC247"/>
+            <circle cx="238" cy="205" r="9" fill="#35D47D"/>
+            <rect x="184" y="286" width="256" height="15" rx="7.5" fill="rgba(60,102,175,0.12)"/>
+            <rect x="184" y="320" width="178" height="15" rx="7.5" fill="rgba(60,102,175,0.08)"/>
           </g>
 
-          <!-- Double-headed vertical arrows -->
-          <g opacity="0.85">
-            <!-- Top arrow -->
-            <line x1="512" y1="190" x2="512" y2="258" stroke="#A78BFA" stroke-width="5" stroke-linecap="round"/>
-            <path d="M500 202 L512 188 L524 202" fill="none" stroke="#A78BFA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- Bottom arrow -->
-            <line x1="512" y1="722" x2="512" y2="790" stroke="#A78BFA" stroke-width="5" stroke-linecap="round"/>
-            <path d="M500 778 L512 792 L524 778" fill="none" stroke="#A78BFA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Glass foreground window -->
+          <g filter="url(#lg-window-shadow)">
+            <rect x="244" y="276" width="648" height="538" rx="52" ry="52" fill="url(#lg-surface)" stroke="rgba(255,255,255,0.9)" stroke-width="3.5"/>
+            <rect x="244" y="276" width="648" height="76" rx="52" ry="52" fill="url(#lg-chrome)"/>
+            <rect x="244" y="318" width="648" height="34" fill="rgba(255,255,255,0.38)"/>
+            <circle cx="300" cy="316" r="10" fill="#FF6B67"/>
+            <circle cx="334" cy="316" r="10" fill="#FFC247"/>
+            <circle cx="368" cy="316" r="10" fill="#35D47D"/>
+            <rect x="312" y="410" width="332" height="17" rx="8.5" fill="rgba(40,84,160,0.13)"/>
+            <rect x="312" y="449" width="232" height="17" rx="8.5" fill="rgba(40,84,160,0.08)"/>
+            <rect x="312" y="502" width="512" height="242" rx="26" ry="26" fill="rgba(255,255,255,0.34)"/>
+            <path d="M284 304 C388 292 520 288 852 300" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="5" stroke-linecap="round" opacity="0.68"/>
           </g>
 
-          <!-- Resize handles on corners -->
-          <g opacity="0.8">
-            <rect x="236" y="260" width="44" height="10" rx="5" fill="#8B5CF6"/>
-            <rect x="236" y="260" width="10" height="44" rx="5" fill="#8B5CF6"/>
-            <rect x="740" y="260" width="44" height="10" rx="5" fill="#8B5CF6"/>
-            <rect x="774" y="260" width="10" height="44" rx="5" fill="#8B5CF6"/>
-            <rect x="236" y="686" width="44" height="10" rx="5" fill="#8B5CF6"/>
-            <rect x="236" y="652" width="10" height="44" rx="5" fill="#8B5CF6"/>
-            <rect x="740" y="686" width="44" height="10" rx="5" fill="#8B5CF6"/>
-            <rect x="774" y="652" width="10" height="44" rx="5" fill="#8B5CF6"/>
-          </g>
-        </svg>
-      </div>
-      <span class="label">方案 B — 四向缩放</span>
-      <span class="desc">窗口居中 + 四个方向的双向箭头<br>经典「缩放」视觉语言</span>
-    </div>
-
-    <!-- Design 3: Corner Drag -->
-    <div class="icon-card">
-      <div class="icon-frame">
-        <svg width="256" height="256" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#18181b"/>
-              <stop offset="100%" stop-color="#09090b"/>
-            </linearGradient>
-            <radialGradient id="glow3" cx="30%" cy="30%" r="50%">
-              <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.15"/>
-              <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
-            </radialGradient>
-            <filter id="shadow3" x="-15%" y="-15%" width="130%" height="130%">
-              <feDropShadow dx="0" dy="6" stdDeviation="14" flood-color="rgba(139,92,246,0.3)"/>
-            </filter>
-            <filter id="glow3a" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="16"/>
-            </filter>
-            <clipPath id="clip3">
-              <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224"/>
-            </clipPath>
-          </defs>
-
-          <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bg3)"/>
-          <circle cx="300" cy="300" r="500" fill="url(#glow3)" clip-path="url(#clip3)"/>
-
-          <!-- Window body -->
-          <g filter="url(#shadow3)">
-            <rect x="240" y="300" width="544" height="440" rx="22" ry="22" fill="#27272a" stroke="rgba(255,255,255,0.16)" stroke-width="3"/>
-            <rect x="240" y="300" width="544" height="48" rx="22" ry="22" fill="#3f3f46"/>
-            <rect x="240" y="324" width="544" height="24" fill="#3f3f46"/>
-            <circle cx="278" cy="324" r="6.5" fill="#FF6058"/>
-            <circle cx="300" cy="324" r="6.5" fill="#FFBD2E"/>
-            <circle cx="322" cy="324" r="6.5" fill="#28CA42"/>
-
-            <rect x="290" y="390" width="280" height="12" rx="6" fill="rgba(255,255,255,0.08)"/>
-            <rect x="290" y="420" width="200" height="12" rx="6" fill="rgba(255,255,255,0.05)"/>
-            <rect x="290" y="460" width="444" height="230" rx="10" ry="10" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
+          <!-- Liquid specular streaks -->
+          <g opacity="0.78">
+            <path d="M174 128 C284 94 405 118 490 76" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" opacity="0.54"/>
+            <path d="M654 190 C738 156 828 176 894 130" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" opacity="0.44"/>
+            <path d="M354 818 C468 850 610 826 704 878" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" opacity="0.36"/>
           </g>
 
-          <!-- Corner handle being dragged outward - bottom-right -->
+          <!-- Resize handles -->
           <g>
-            <!-- Original corner position (ghost) -->
-            <rect x="760" y="716" width="24" height="24" rx="4" fill="none" stroke="rgba(139,92,246,0.3)" stroke-width="2" stroke-dasharray="6 4"/>
-
-            <!-- Drag trail -->
-            <line x1="772" y1="728" x2="840" y2="796" stroke="rgba(167,139,250,0.2)" stroke-width="3" stroke-linecap="round" stroke-dasharray="8 6"/>
-
-            <!-- Active corner handle (dragged) -->
-            <g filter="url(#glow3a)">
-              <rect x="820" y="776" width="52" height="12" rx="6" fill="#A78BFA"/>
-              <rect x="860" y="776" width="12" height="52" rx="6" fill="#A78BFA"/>
-            </g>
-            <rect x="820" y="776" width="52" height="12" rx="6" fill="#8B5CF6"/>
-            <rect x="860" y="776" width="12" height="52" rx="6" fill="#8B5CF6"/>
-
-            <!-- Cursor arrow at the corner -->
-            <g transform="translate(875, 820) rotate(-45)">
-              <path d="M0 -18 L5 -4 L0 -6 L-5 -4 Z" fill="#A78BFA"/>
-              <line x1="0" y1="-6" x2="0" y2="12" stroke="#A78BFA" stroke-width="3" stroke-linecap="round"/>
-            </g>
-          </g>
-
-          <!-- Other corner handles (static) -->
-          <g opacity="0.5">
-            <rect x="216" y="280" width="40" height="10" rx="5" fill="#8B5CF6"/>
-            <rect x="216" y="280" width="10" height="40" rx="5" fill="#8B5CF6"/>
-            <rect x="760" y="280" width="40" height="10" rx="5" fill="#8B5CF6"/>
-            <rect x="790" y="280" width="10" height="40" rx="5" fill="#8B5CF6"/>
-            <rect x="216" y="726" width="40" height="10" rx="5" fill="#8B5CF6"/>
-            <rect x="216" y="696" width="10" height="40" rx="5" fill="#8B5CF6"/>
+            <rect x="139" y="219" width="52" height="12" rx="6" fill="url(#lg-accent)"/>
+            <rect x="179" y="179" width="12" height="52" rx="6" fill="url(#lg-accent)"/>
+            <rect x="849" y="219" width="52" height="12" rx="6" fill="url(#lg-accent)"/>
+            <rect x="849" y="179" width="12" height="52" rx="6" fill="url(#lg-accent)"/>
+            <rect x="139" y="794" width="52" height="12" rx="6" fill="url(#lg-accent)"/>
+            <rect x="179" y="794" width="12" height="52" rx="6" fill="url(#lg-accent)"/>
+            <rect x="849" y="794" width="52" height="12" rx="6" fill="url(#lg-accent)"/>
+            <rect x="849" y="794" width="12" height="52" rx="6" fill="url(#lg-accent)"/>
           </g>
         </svg>
       </div>
-      <span class="label">方案 C — 拖拽角落</span>
-      <span class="desc">窗口右下角被拖拽拉伸，带拖拽轨迹<br>直接展示「拖拽缩放窗口」操作</span>
+      <span class="label">浅色封面 — 液态玻璃</span>
+      <span class="desc">浅色封面、透明玻璃层和高光折射<br>更贴近 macOS Liquid Glass 视觉</span>
     </div>
   </div>
 </div>
