@@ -1,0 +1,96 @@
+{
+  "source": "/Users/baikaihao/Desktop/Sized/Sized/SettingsWindow/AppRulesPage.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "启用应用规则",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 26
+        }
+      },
+      {
+        "comment": "",
+        "key": "还没有应用规则",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 48
+        }
+      },
+      {
+        "comment": "",
+        "key": "手动添加",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 87
+        }
+      },
+      {
+        "comment": "",
+        "key": "添加 App 规则",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 90
+        }
+      },
+      {
+        "comment": "",
+        "key": "启用此规则",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 99
+        }
+      },
+      {
+        "comment": "",
+        "key": "App 名称",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 101
+        }
+      },
+      {
+        "comment": "",
+        "key": "Bundle Identifier",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 104
+        }
+      },
+      {
+        "comment": "",
+        "key": "复制默认分配",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 111
+        }
+      },
+      {
+        "comment": "",
+        "key": "恢复默认",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 117
+        }
+      },
+      {
+        "comment": "",
+        "key": "删除规则",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 125
+        }
+      },
+      {
+        "comment": "",
+        "key": "选择一个规则，或添加当前前台 App。",
+        "location": {
+          "startingColumn": 19,
+          "startingLine": 137
+        }
+      }
+    ]
+  },
+  "version": 1
+}

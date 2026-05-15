@@ -1,0 +1,80 @@
+{
+  "source": "/Users/baikaihao/Desktop/Sized/Sized/SettingsWindow/PreviewStylePage.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "显示目标尺寸预览",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 16
+        }
+      },
+      {
+        "comment": "",
+        "key": "边框颜色",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 23
+        }
+      },
+      {
+        "comment": "",
+        "key": "背景颜色",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 27
+        }
+      },
+      {
+        "comment": "",
+        "key": "ESC 键取消轮盘",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 38
+        }
+      },
+      {
+        "comment": "",
+        "key": "鼠标右键取消轮盘",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 39
+        }
+      },
+      {
+        "comment": "",
+        "key": "模拟目标窗口区域",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 68
+        }
+      },
+      {
+        "comment": "",
+        "key": "圆角",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 72
+        }
+      },
+      {
+        "comment": "",
+        "key": "边框",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 73
+        }
+      },
+      {
+        "comment": "",
+        "key": "内边距",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 74
+        }
+      }
+    ]
+  },
+  "version": 1
+}

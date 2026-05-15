@@ -1,0 +1,24 @@
+{
+  "source": "/Users/baikaihao/Desktop/Sized/Sized/SizedApp.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Sized",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 8
+        }
+      },
+      {
+        "comment": "",
+        "key": "设置...",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 19
+        }
+      }
+    ]
+  },
+  "version": 1
+}

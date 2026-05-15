@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(gh auth *)",
+      "Bash(ssh-keygen *)",
+      "Bash(git remote *)",
+      "Bash(ssh *)",
+      "Bash(git restore *)",
+      "Bash(git pull *)",
+      "Bash(git checkout *)",
+      "Bash(git fetch *)",
+      "Bash(git reset *)",
+      "Bash(xcodebuild -project Sized.xcodeproj -scheme Sized -configuration Debug build)"
+    ]
+  }
+}

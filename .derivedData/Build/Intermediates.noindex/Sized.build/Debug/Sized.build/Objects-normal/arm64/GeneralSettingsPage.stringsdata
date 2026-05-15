@@ -1,0 +1,192 @@
+{
+  "source": "/Users/baikaihao/Desktop/Sized/Sized/SettingsWindow/GeneralSettingsPage.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "确定要重置所有设置吗？",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 116
+        }
+      },
+      {
+        "comment": "",
+        "key": "登录时自动启动",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 14
+        }
+      },
+      {
+        "comment": "",
+        "key": "在菜单栏中显示图标",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 34
+        }
+      },
+      {
+        "comment": "",
+        "key": "隐藏 Dock 图标",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 35
+        }
+      },
+      {
+        "comment": "",
+        "key": "已获得辅助功能权限",
+        "location": {
+          "startingColumn": 51,
+          "startingLine": 41
+        }
+      },
+      {
+        "comment": "",
+        "key": "需要辅助功能权限才能调整其他应用窗口",
+        "location": {
+          "startingColumn": 83,
+          "startingLine": 41
+        }
+      },
+      {
+        "comment": "",
+        "key": "重新检查",
+        "location": {
+          "startingColumn": 57,
+          "startingLine": 54
+        }
+      },
+      {
+        "comment": "",
+        "key": "打开系统设置",
+        "location": {
+          "startingColumn": 74,
+          "startingLine": 54
+        }
+      },
+      {
+        "comment": "",
+        "key": "刷新",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 60
+        }
+      },
+      {
+        "comment": "",
+        "key": "使用 Option 键作为触发键",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 72
+        }
+      },
+      {
+        "comment": "",
+        "key": "Option 位置",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 75
+        }
+      },
+      {
+        "comment": "",
+        "key": "双击触发键激活轮盘",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 85
+        }
+      },
+      {
+        "comment": "",
+        "key": "鼠标中键激活轮盘",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 86
+        }
+      },
+      {
+        "comment": "",
+        "key": "快捷键",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 67
+        }
+      },
+      {
+        "comment": "",
+        "key": "启用窗口动画",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 91
+        }
+      },
+      {
+        "comment": "",
+        "key": "忽略全屏窗口",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 95
+        }
+      },
+      {
+        "comment": "",
+        "key": "触觉反馈",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 96
+        }
+      },
+      {
+        "comment": "",
+        "key": "窗口调整诊断日志",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 97
+        }
+      },
+      {
+        "comment": "",
+        "key": "重置所有设置",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 105
+        }
+      },
+      {
+        "comment": "",
+        "key": "GitHub Issue",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 111
+        }
+      },
+      {
+        "comment": "",
+        "key": "重置所有设置",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 117
+        }
+      },
+      {
+        "comment": "",
+        "key": "取消",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 120
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sized",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 134
+        }
+      }
+    ]
+  },
+  "version": 1
+}
