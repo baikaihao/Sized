@@ -36,10 +36,14 @@ final class SizedManager: ObservableObject {
     private var frontmostApplication: NSRunningApplication?
     private var activeAssignments: AssignmentSettings = .default
     private var didStartEventTriggers = false
+    private var didStartServices = false
 
     private init() {}
 
     func start() {
+        guard !didStartServices else { return }
+        didStartServices = true
+
         AccessibilityManager.shared.refresh()
         if !AccessibilityManager.shared.isTrusted {
             AccessibilityManager.shared.startAutoRefresh()
@@ -72,6 +76,8 @@ final class SizedManager: ObservableObject {
         indicatorService.hideAll()
         StatusItemController.shared.applyVisibility(false)
         AccessibilityManager.shared.stopAutoRefresh()
+        cancellables.removeAll()
+        didStartServices = false
     }
 
     func refreshPermissions() {
@@ -80,13 +86,6 @@ final class SizedManager: ObservableObject {
             restartEventTriggers()
         } else {
             AccessibilityManager.shared.startAutoRefresh()
-        }
-    }
-
-    func openSettings() {
-        NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { $0.title == "Sized" }) {
-            window.makeKeyAndOrderFront(nil)
         }
     }
 
