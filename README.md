@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="other/AppIcon.svg" alt="Sized App Icon" width="128" height="128">
+  <img src="other/app-icon-light.png" alt="Sized App Icon" width="128" height="128" style="border-radius: 24px;">
 </p>
 
 <h1 align="center">Sized</h1>
