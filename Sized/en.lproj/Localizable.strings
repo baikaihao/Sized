@@ -109,6 +109,8 @@
 "行为设置" = "Behavior Settings";
 "确认方式" = "Confirmation mode";
 "窗口调整动画" = "Window resize animation";
+"启用窗口动画" = "Enable window animation";
+"窗口动画时长" = "Window animation duration";
 "改尺寸锚点" = "Resize anchor";
 "忽略全屏窗口" = "Ignore full-screen windows";
 "触觉反馈" = "Haptic feedback";

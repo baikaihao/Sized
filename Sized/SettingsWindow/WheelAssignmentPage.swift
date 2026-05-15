@@ -10,43 +10,38 @@ struct WheelAssignmentPage: View {
     @State private var importError: String?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                PageHeader(
-                    title: "尺寸分配",
-                    subtitle: "为 8 个方向配置窗口尺寸；方向只用于选择，不会把窗口移动到对应角落。"
-                )
+        SettingsPageContainer {
+            Text("尺寸分配".localized)
+                .font(.largeTitle.bold())
 
-                AssignmentEditor(assignments: $settings.assignments, selectedSlot: $selectedSlot)
+            AssignmentEditor(assignments: $settings.assignments, selectedSlot: $selectedSlot)
 
-                SettingsSection(title: "配置管理", systemImage: "doc.badge.gearshape") {
-                    HStack {
-                        Button {
-                            settings.resetAssignments()
-                        } label: {
-                            Label("恢复默认分配", systemImage: "arrow.counterclockwise")
-                        }
+            SettingsSection(title: "配置管理", systemImage: "doc.badge.gearshape") {
+                HStack {
+                    Button {
+                        settings.resetAssignments()
+                    } label: {
+                        Label("恢复默认分配", systemImage: "arrow.counterclockwise")
+                    }
 
-                        Spacer()
+                    Spacer()
 
-                        Button {
-                            exportText = (try? settings.exportJSON()) ?? ""
-                            showingExport = true
-                        } label: {
-                            Label("导出", systemImage: "square.and.arrow.up")
-                        }
+                    Button {
+                        exportText = (try? settings.exportJSON()) ?? ""
+                        showingExport = true
+                    } label: {
+                        Label("导出", systemImage: "square.and.arrow.up")
+                    }
 
-                        Button {
-                            importText = ""
-                            importError = nil
-                            showingImport = true
-                        } label: {
-                            Label("导入", systemImage: "square.and.arrow.down")
-                        }
+                    Button {
+                        importText = ""
+                        importError = nil
+                        showingImport = true
+                    } label: {
+                        Label("导入", systemImage: "square.and.arrow.down")
                     }
                 }
             }
-            .padding(32)
         }
         .sheet(isPresented: $showingExport) {
             JSONSheet(title: "导出配置", text: $exportText, error: nil, primaryTitle: "完成") {
@@ -86,7 +81,9 @@ struct AssignmentEditor: View {
             .frame(width: 430)
 
             AssignmentDetailPanel(slot: selectedSlot, action: selectedAction)
+                .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -205,14 +202,14 @@ private struct AssignmentDetailPanel: View {
                     .textFieldStyle(.roundedBorder)
 
                 HStack {
-            Text(action.kind.displayName.localized)
+                    Text(action.kind.displayName.localized)
                         .font(.headline)
                     Spacer()
                 }
                 Text(action.sizeDisplayName)
                     .font(.callout.monospacedDigit())
                     .foregroundStyle(.secondary)
-                .padding(.top, 4)
+                    .padding(.top, 4)
             }
 
             if action.kind == .custom {
@@ -231,6 +228,7 @@ private struct AssignmentDetailPanel: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .frame(maxWidth: .infinity)
     }
 }
 

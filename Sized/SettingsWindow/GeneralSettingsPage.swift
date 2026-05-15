@@ -3,118 +3,116 @@ import SwiftUI
 struct GeneralSettingsPage: View {
     @EnvironmentObject private var settings: SettingsStore
     @ObservedObject private var accessibility = AccessibilityManager.shared
+    @ObservedObject private var appIconProvider = AppIconProvider.shared
     @State private var showingResetConfirmation = false
     @State private var launchAtLoginError: String?
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                appIdentity
+        SettingsPageContainer {
+            appIdentity
 
-                SettingsSection(title: "通用设置", systemImage: "switch.2") {
-                    Toggle("登录时自动启动", isOn: Binding(
-                        get: { settings.general.launchAtLogin },
-                        set: { enabled in
-                            settings.general.launchAtLogin = enabled
-                            do {
-                                try LaunchAtLoginManager.shared.setEnabled(enabled)
-                                launchAtLoginError = nil
-                            } catch {
-                                launchAtLoginError = error.localizedDescription
-                                settings.general.launchAtLogin = LaunchAtLoginManager.shared.isEnabled
-                            }
-                        }
-                    ))
-
-                    if let launchAtLoginError {
-                        Label(launchAtLoginError, systemImage: "exclamationmark.triangle")
-                            .font(.footnote)
-                            .foregroundStyle(.red)
-                    }
-
-                    Toggle("在菜单栏中显示图标", isOn: $settings.general.showMenuBarIcon)
-                    Toggle("隐藏 Dock 图标", isOn: $settings.general.hideDockIcon)
-                }
-
-                SettingsSection(title: "辅助功能权限", systemImage: "accessibility") {
-                    HStack {
-                        Label(
-                            accessibility.isTrusted ? "已获得辅助功能权限" : "需要辅助功能权限才能调整其他应用窗口",
-                            systemImage: accessibility.isTrusted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
-                        )
-                        .foregroundStyle(accessibility.isTrusted ? .green : .orange)
-
-                        Spacer()
-
-                        Button {
-                            accessibility.refresh()
-                            if !accessibility.isTrusted {
-                                accessibility.requestAccess()
-                            }
-                        } label: {
-                            Label(accessibility.isTrusted ? "重新检查" : "打开系统设置", systemImage: "gear")
-                        }
-
-                        Button {
-                            accessibility.refresh()
-                        } label: {
-                            Label("刷新", systemImage: "arrow.clockwise")
+            SettingsSection(title: "通用设置", systemImage: "switch.2") {
+                Toggle("登录时自动启动", isOn: Binding(
+                    get: { settings.general.launchAtLogin },
+                    set: { enabled in
+                        settings.general.launchAtLogin = enabled
+                        do {
+                            try LaunchAtLoginManager.shared.setEnabled(enabled)
+                            launchAtLoginError = nil
+                        } catch {
+                            launchAtLoginError = error.localizedDescription
+                            settings.general.launchAtLogin = LaunchAtLoginManager.shared.isEnabled
                         }
                     }
+                ))
+
+                if let launchAtLoginError {
+                    Label(launchAtLoginError, systemImage: "exclamationmark.triangle")
+                        .font(.footnote)
+                        .foregroundStyle(.red)
                 }
 
-                SettingsSection(title: "触发键", systemImage: "keyboard") {
-                    HStack {
-                        Text("快捷键")
-                        Spacer()
-                        TriggerRecorderButton(displayName: $settings.trigger.triggerKeyDisplayName)
+                Toggle("在菜单栏中显示图标", isOn: $settings.general.showMenuBarIcon)
+                Toggle("隐藏 Dock 图标", isOn: $settings.general.hideDockIcon)
+            }
+
+            SettingsSection(title: "辅助功能权限", systemImage: "accessibility") {
+                HStack {
+                    Label(
+                        accessibility.isTrusted ? "已获得辅助功能权限" : "需要辅助功能权限才能调整其他应用窗口",
+                        systemImage: accessibility.isTrusted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
+                    )
+                    .foregroundStyle(accessibility.isTrusted ? .green : .orange)
+
+                    Spacer()
+
+                    Button {
+                        accessibility.refresh()
+                        if !accessibility.isTrusted {
+                            accessibility.requestAccess()
+                        }
+                    } label: {
+                        Label(accessibility.isTrusted ? "重新检查" : "打开系统设置", systemImage: "gear")
                     }
-                    
-                    Toggle("使用 Option 键作为触发键", isOn: $settings.trigger.useOptionAsTrigger)
-                    
-                    if settings.trigger.useOptionAsTrigger {
-                        Picker("Option 位置", selection: $settings.trigger.optionSide) {
-                            ForEach(OptionSide.allCases) { side in
-                                Text(side.displayName).tag(side)
-                            }
-                        }
-                        .labelsHidden()
-                        .pickerStyle(.segmented)
-                    }
-                    
-                    SliderRow(title: "触发延迟", value: $settings.trigger.triggerDelayMilliseconds, range: 0...500, step: 10, suffix: "ms")
-                    Toggle("双击触发键激活轮盘", isOn: $settings.trigger.doubleTapTrigger)
-                    Toggle("鼠标中键激活轮盘", isOn: $settings.trigger.middleClickTrigger)
-                }
 
-                SettingsSection(title: "行为设置", systemImage: "cursorarrow.motionlines") {
-                    PickerRow(title: "确认方式", selection: $settings.behavior.confirmationMode)
-                    Toggle("窗口调整动画", isOn: $settings.behavior.resizeAnimation)
-                    PickerRow(title: "改尺寸锚点", selection: $settings.behavior.resizeAnchor)
-                    Toggle("忽略全屏窗口", isOn: $settings.behavior.ignoreFullScreenWindows)
-                    Toggle("触觉反馈", isOn: $settings.behavior.hapticFeedback)
-                    Toggle("窗口调整诊断日志", isOn: $settings.behavior.resizeDiagnostics)
-                }
-
-                SettingsSection(title: "重置与支持", systemImage: "questionmark.circle") {
-                    HStack {
-                        Button(role: .destructive) {
-                            showingResetConfirmation = true
-                        } label: {
-                            Label("重置所有设置", systemImage: "trash")
-                        }
-
-                        Spacer()
-
-                        Link(destination: URL(string: "https://github.com/baikaihao/Sized/issues")!) {
-                            Label("GitHub Issue", systemImage: "ladybug")
-                        }
+                    Button {
+                        accessibility.refresh()
+                    } label: {
+                        Label("刷新", systemImage: "arrow.clockwise")
                     }
                 }
             }
-            .padding(32)
-            .frame(maxWidth: 760)
-            .frame(maxWidth: .infinity)
+
+            SettingsSection(title: "触发键", systemImage: "keyboard") {
+                HStack {
+                    Text("快捷键")
+                    Spacer()
+                    TriggerRecorderButton(displayName: $settings.trigger.triggerKeyDisplayName)
+                }
+
+                Toggle("使用 Option 键作为触发键", isOn: $settings.trigger.useOptionAsTrigger)
+
+                if settings.trigger.useOptionAsTrigger {
+                    Picker("Option 位置", selection: $settings.trigger.optionSide) {
+                        ForEach(OptionSide.allCases) { side in
+                            Text(side.displayName).tag(side)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                }
+
+                SliderRow(title: "触发延迟", value: $settings.trigger.triggerDelayMilliseconds, range: 0...500, step: 10, suffix: "ms")
+                Toggle("双击触发键激活轮盘", isOn: $settings.trigger.doubleTapTrigger)
+                Toggle("鼠标中键激活轮盘", isOn: $settings.trigger.middleClickTrigger)
+            }
+
+            SettingsSection(title: "行为设置", systemImage: "cursorarrow.motionlines") {
+                PickerRow(title: "确认方式", selection: $settings.behavior.confirmationMode)
+                Toggle("启用窗口动画", isOn: $settings.behavior.resizeAnimation)
+                SliderRowDecimal(title: "窗口动画时长", value: $settings.behavior.resizeAnimationDuration, range: 0.05...0.5, step: 0.01, suffix: "秒")
+                    .disabled(!settings.behavior.resizeAnimation)
+                PickerRow(title: "改尺寸锚点", selection: $settings.behavior.resizeAnchor)
+                Toggle("忽略全屏窗口", isOn: $settings.behavior.ignoreFullScreenWindows)
+                Toggle("触觉反馈", isOn: $settings.behavior.hapticFeedback)
+                Toggle("窗口调整诊断日志", isOn: $settings.behavior.resizeDiagnostics)
+            }
+
+            SettingsSection(title: "重置与支持", systemImage: "questionmark.circle") {
+                HStack {
+                    Button(role: .destructive) {
+                        showingResetConfirmation = true
+                    } label: {
+                        Label("重置所有设置", systemImage: "trash")
+                    }
+
+                    Spacer()
+
+                    Link(destination: URL(string: "https://github.com/baikaihao/Sized/issues")!) {
+                        Label("GitHub Issue", systemImage: "ladybug")
+                    }
+                }
+            }
         }
         .confirmationDialog("确定要重置所有设置吗？", isPresented: $showingResetConfirmation) {
             Button("重置所有设置", role: .destructive) {
@@ -130,9 +128,7 @@ struct GeneralSettingsPage: View {
 
     private var appIdentity: some View {
         VStack(spacing: 12) {
-            Image(nsImage: NSApp.applicationIconImage ?? NSImage())
-                .resizable()
-                .frame(width: 128, height: 128)
+            HighlightedAppIcon(image: appIconProvider.currentIcon)
 
             Text("Sized")
                 .font(.system(size: 32, weight: .semibold))
@@ -142,6 +138,33 @@ struct GeneralSettingsPage: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
+    }
+}
+
+private struct HighlightedAppIcon: View {
+    let image: NSImage
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Image(nsImage: image)
+            .resizable()
+            .frame(width: 128, height: 128)
+            .overlay {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .strokeBorder(borderHighlight, lineWidth: 1)
+            }
+    }
+
+    private var borderHighlight: LinearGradient {
+        LinearGradient(
+            stops: [
+                .init(color: .white.opacity(colorScheme == .dark ? 0.32 : 0.42), location: 0),
+                .init(color: .white.opacity(colorScheme == .dark ? 0.12 : 0.18), location: 0.38),
+                .init(color: .black.opacity(colorScheme == .dark ? 0.16 : 0.08), location: 1)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 }
 
@@ -209,12 +232,12 @@ private struct KeyCaptureView: NSViewRepresentable {
 
         func keyDown(_ event: NSEvent) {
             guard isRecording else { return }
-            
+
             if event.keyCode == 53 {
                 isRecording = false
                 return
             }
-            
+
             let value = TriggerKeyFormatter.displayName(for: currentModifiers, keyCode: event.keyCode)
             if !value.isEmpty {
                 displayName = value
@@ -252,14 +275,14 @@ private enum TriggerKeyFormatter {
         if flags.contains(.shift) { parts.append("⇧") }
         if flags.contains(.command) { parts.append("⌘") }
         if flags.contains(.capsLock) { parts.append("⇪") }
-        
+
         if let keyCode = keyCode, let keyName = keyName(for: keyCode) {
             parts.append(keyName)
         }
-        
+
         return parts.joined()
     }
-    
+
     private static func keyName(for keyCode: UInt16) -> String? {
         switch keyCode {
         case 0: return "A"
@@ -337,28 +360,35 @@ private enum TriggerKeyFormatter {
         case 79: return "F20"
         case 80: return "F22"
         case 82: return "F21"
-        case 83: return "1"
-        case 84: return "2"
-        case 85: return "3"
-        case 86: return "4"
-        case 87: return "5"
-        case 88: return "6"
-        case 89: return "7"
-        case 91: return "8"
-        case 92: return "9"
-        case 93: return "0"
-        case 96: return "F5"
-        case 97: return "F6"
-        case 98: return "F7"
-        case 99: return "F3"
-        case 100: return "F8"
-        case 101: return "F9"
-        case 103: return "F11"
-        case 105: return "F13"
-        case 107: return "F14"
-        case 109: return "F10"
-        case 111: return "F12"
-        case 113: return "F15"
+        case 83: return "F23"
+        case 84: return "F24"
+        case 85: return "JIS Yen"
+        case 86: return "JIS Underscore"
+        case 87: return "F11"
+        case 88: return "JIS Keypad Comma"
+        case 89: return "F13"
+        case 90: return "F16"
+        case 91: return "F14"
+        case 92: return "F10"
+        case 93: return "Context Menu"
+        case 94: return "F6"
+        case 95: return "F5"
+        case 96: return "F12"
+        case 97: return "F15"
+        case 98: return "Help"
+        case 99: return "Home"
+        case 100: return "Page Up"
+        case 101: return "Forward Delete"
+        case 103: return "F4"
+        case 105: return "F2"
+        case 106: return "F1"
+        case 107: return "F8"
+        case 109: return "F9"
+        case 110: return "JIS Eisu"
+        case 111: return "F7"
+        case 112: return "F3"
+        case 113: return "JIS Kana"
+        case 114: return "End"
         case 115: return "Home"
         case 116: return "Page Up"
         case 117: return "Forward Delete"
@@ -367,10 +397,10 @@ private enum TriggerKeyFormatter {
         case 120: return "F2"
         case 121: return "Page Down"
         case 122: return "F1"
-        case 123: return "Left"
-        case 124: return "Right"
-        case 125: return "Down"
-        case 126: return "Up"
+        case 123: return "Left Arrow"
+        case 124: return "Right Arrow"
+        case 125: return "Down Arrow"
+        case 126: return "Up Arrow"
         default: return nil
         }
     }

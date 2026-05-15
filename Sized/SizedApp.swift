@@ -1,22 +1,19 @@
-//
-//  SizedApp.swift
-//  Sized
-//
-//  Created by 白凯浩 on 2026/5/8.
-//
-
 import SwiftUI
 
 @main
 struct SizedApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var settings = SettingsStore.shared
 
     var body: some Scene {
-        Settings {
+        WindowGroup("Sized") {
             SettingsView()
                 .environmentObject(settings)
+                .background(AppLifecycleView(onAppear: startServices))
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                    SizedManager.shared.refreshPermissions()
+                }
         }
+        .windowStyle(.titleBar)
         .commands {
             CommandGroup(replacing: .appSettings) {
                 Button("设置...") {
@@ -24,6 +21,28 @@ struct SizedApp: App {
                 }
                 .keyboardShortcut(",", modifiers: .command)
             }
+            CommandGroup(replacing: .newItem) {}
         }
     }
+
+    @MainActor
+    private func startServices() {
+        AppIconProvider.shared.start()
+        SizedManager.shared.start()
+        SizedManager.shared.openSettings()
+    }
+}
+
+private struct AppLifecycleView: NSViewRepresentable {
+    let onAppear: () -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            onAppear()
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }

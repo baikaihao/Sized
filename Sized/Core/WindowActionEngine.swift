@@ -9,7 +9,6 @@ final class WindowActionEngine {
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Sized", category: "WindowResize")
     private var resizeContext = ResizeContext()
     private var resizeAnimationTask: Task<Void, Never>?
-    private let resizeAnimationDuration: TimeInterval = 0.16
     private let resizeAnimationFrameRate: Double = 60
 
     private init() {}
@@ -138,7 +137,8 @@ final class WindowActionEngine {
     }
 
     private func animateFrameChange(from startFrame: CGRect, to targetFrame: CGRect, for window: AXUIElement) async {
-        let frameCount = max(1, Int(resizeAnimationDuration * resizeAnimationFrameRate))
+        let duration = SettingsStore.shared.behavior.resizeAnimationDuration
+        let frameCount = max(1, Int(duration * resizeAnimationFrameRate))
         let frameDelay = UInt64(1_000_000_000 / resizeAnimationFrameRate)
 
         for frameIndex in 1...frameCount {

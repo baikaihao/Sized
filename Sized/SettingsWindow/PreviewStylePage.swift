@@ -6,45 +6,38 @@ struct PreviewStylePage: View {
     @State private var backgroundColor = Color(hex: BehaviorSettings.default.previewBackgroundColorHex)
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                PageHeader(
-                    title: "预览窗口",
-                    subtitle: "调整窗口调整操作时显示的预览边框样式。"
-                )
+        SettingsPageContainer {
+            Text("预览窗口".localized)
+                .font(.largeTitle.bold())
 
-                VStack(spacing: 16) {
-                    PreviewShowcasePanel(settings: settings.behavior)
+            PreviewShowcasePanel(settings: settings.behavior)
 
-                    SettingsSection(title: "基础设置", systemImage: "rectangle.dashed") {
-                        Toggle("显示目标尺寸预览", isOn: $settings.behavior.showPreview)
-                        SliderRow(title: "预览内边距", value: $settings.behavior.previewPadding, range: 0...30, step: 1, suffix: "pt")
-                    }
-
-                    SettingsSection(title: "边框样式", systemImage: "paintbrush") {
-                        SliderRow(title: "圆角半径", value: $settings.behavior.previewCornerRadius, range: 0...28, step: 1, suffix: "pt")
-                        SliderRow(title: "边框宽度", value: $settings.behavior.previewBorderWidth, range: 1...6, step: 1, suffix: "pt")
-                        ColorPicker("边框颜色", selection: $borderColor, supportsOpacity: false)
-                            .onChange(of: borderColor) { _, newValue in
-                                settings.behavior.previewBorderColorHex = newValue.hexString
-                            }
-                        ColorPicker("背景颜色", selection: $backgroundColor, supportsOpacity: false)
-                            .onChange(of: backgroundColor) { _, newValue in
-                                settings.behavior.previewBackgroundColorHex = newValue.hexString
-                            }
-                    }
-
-                    SettingsSection(title: "动画", systemImage: "sparkles") {
-                        SliderRowDecimal(title: "过渡速度", value: $settings.behavior.previewAnimationSpeed, range: 0.05...0.5, step: 0.05, suffix: "秒")
-                    }
-
-                    SettingsSection(title: "取消方式", systemImage: "xmark.circle") {
-                        Toggle("ESC 键取消轮盘", isOn: $settings.behavior.escapeCancelsRadial)
-                        Toggle("鼠标右键取消轮盘", isOn: $settings.behavior.rightClickCancelsRadial)
-                    }
-                }
+            SettingsSection(title: "基础设置", systemImage: "rectangle.dashed") {
+                Toggle("显示目标尺寸预览", isOn: $settings.behavior.showPreview)
+                SliderRow(title: "预览内边距", value: $settings.behavior.previewPadding, range: 0...30, step: 1, suffix: "pt")
             }
-            .padding(32)
+
+            SettingsSection(title: "边框样式", systemImage: "paintbrush") {
+                SliderRow(title: "圆角半径", value: $settings.behavior.previewCornerRadius, range: 0...28, step: 1, suffix: "pt")
+                SliderRow(title: "边框宽度", value: $settings.behavior.previewBorderWidth, range: 1...6, step: 1, suffix: "pt")
+                ColorPicker("边框颜色", selection: $borderColor, supportsOpacity: false)
+                    .onChange(of: borderColor) { _, newValue in
+                        settings.behavior.previewBorderColorHex = newValue.hexString
+                    }
+                ColorPicker("背景颜色", selection: $backgroundColor, supportsOpacity: false)
+                    .onChange(of: backgroundColor) { _, newValue in
+                        settings.behavior.previewBackgroundColorHex = newValue.hexString
+                    }
+            }
+
+            SettingsSection(title: "动画", systemImage: "sparkles") {
+                SliderRowDecimal(title: "过渡速度", value: $settings.behavior.previewAnimationSpeed, range: 0.05...0.5, step: 0.05, suffix: "秒")
+            }
+
+            SettingsSection(title: "取消方式", systemImage: "xmark.circle") {
+                Toggle("ESC 键取消轮盘", isOn: $settings.behavior.escapeCancelsRadial)
+                Toggle("鼠标右键取消轮盘", isOn: $settings.behavior.rightClickCancelsRadial)
+            }
         }
         .onAppear {
             borderColor = Color(hex: settings.behavior.previewBorderColorHex)

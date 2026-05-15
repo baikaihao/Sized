@@ -229,6 +229,7 @@ extension TriggerSettings {
 struct BehaviorSettings: Codable, Equatable {
     var confirmationMode: ConfirmationMode
     var resizeAnimation: Bool
+    var resizeAnimationDuration: Double
     var resizeAnchor: ResizeAnchor
     var ignoreFullScreenWindows: Bool
     var showPreview: Bool
@@ -246,6 +247,7 @@ struct BehaviorSettings: Codable, Equatable {
     static let `default` = BehaviorSettings(
         confirmationMode: .release,
         resizeAnimation: true,
+        resizeAnimationDuration: 0.16,
         resizeAnchor: .currentCenter,
         ignoreFullScreenWindows: true,
         showPreview: true,
@@ -266,6 +268,7 @@ extension BehaviorSettings {
     private enum CodingKeys: String, CodingKey {
         case confirmationMode
         case resizeAnimation
+        case resizeAnimationDuration
         case resizeAnchor
         case ignoreFullScreenWindows
         case showPreview
@@ -285,6 +288,7 @@ extension BehaviorSettings {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         confirmationMode = try container.decodeIfPresent(ConfirmationMode.self, forKey: .confirmationMode) ?? Self.default.confirmationMode
         resizeAnimation = try container.decodeIfPresent(Bool.self, forKey: .resizeAnimation) ?? Self.default.resizeAnimation
+        resizeAnimationDuration = try container.decodeIfPresent(Double.self, forKey: .resizeAnimationDuration) ?? Self.default.resizeAnimationDuration
         resizeAnchor = try container.decodeIfPresent(ResizeAnchor.self, forKey: .resizeAnchor) ?? Self.default.resizeAnchor
         ignoreFullScreenWindows = try container.decodeIfPresent(Bool.self, forKey: .ignoreFullScreenWindows) ?? Self.default.ignoreFullScreenWindows
         showPreview = try container.decodeIfPresent(Bool.self, forKey: .showPreview) ?? Self.default.showPreview
@@ -304,6 +308,7 @@ extension BehaviorSettings {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(confirmationMode, forKey: .confirmationMode)
         try container.encode(resizeAnimation, forKey: .resizeAnimation)
+        try container.encode(resizeAnimationDuration, forKey: .resizeAnimationDuration)
         try container.encode(resizeAnchor, forKey: .resizeAnchor)
         try container.encode(ignoreFullScreenWindows, forKey: .ignoreFullScreenWindows)
         try container.encode(showPreview, forKey: .showPreview)
