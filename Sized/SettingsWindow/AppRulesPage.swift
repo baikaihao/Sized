@@ -18,28 +18,24 @@ struct AppRulesPage: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                PageHeader(
-                    title: "应用规则",
-                    subtitle: "为指定 App 配置独立轮盘分配；没有命中规则时使用默认尺寸分配。"
-                )
+        SettingsPageContainer {
+            Text("应用规则".localized)
+                .font(.largeTitle.bold())
 
-                SettingsSection(title: "规则开关", systemImage: "switch.2") {
-                    Toggle("启用应用规则", isOn: $settings.appRules.isEnabled)
-                }
+            SettingsSection(title: "规则开关", systemImage: "switch.2") {
+                Toggle("启用应用规则", isOn: $settings.appRules.isEnabled)
+            }
 
-                VStack(alignment: .leading, spacing: 16) {
-                    ruleList
+            VStack(alignment: .leading, spacing: 16) {
+                ruleList
 
-                    if let selectedRuleBinding {
-                        ruleEditor(rule: selectedRuleBinding)
-                    } else {
-                        emptyState
-                    }
+                if let selectedRuleBinding {
+                    ruleEditor(rule: selectedRuleBinding)
+                } else {
+                    emptyState
                 }
             }
-            .padding(32)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .onAppear {
             selectedRuleID = selectedRuleID ?? settings.appRules.rules.first?.id

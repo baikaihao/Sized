@@ -70,6 +70,7 @@ final class SizedManager: ObservableObject {
         stopEscapeMonitor()
         stopRightClickCancelMonitor()
         indicatorService.hideAll()
+        StatusItemController.shared.applyVisibility(false)
         AccessibilityManager.shared.stopAutoRefresh()
     }
 
@@ -83,7 +84,10 @@ final class SizedManager: ObservableObject {
     }
 
     func openSettings() {
-        SettingsWindowController.shared.show()
+        NSApp.activate(ignoringOtherApps: true)
+        if let window = NSApp.windows.first(where: { $0.title == "Sized" }) {
+            window.makeKeyAndOrderFront(nil)
+        }
     }
 
     private func beginLoop() {

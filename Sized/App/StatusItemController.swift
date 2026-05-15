@@ -18,17 +18,32 @@ final class StatusItemController {
 
     private func show() {
         guard statusItem == nil else { return }
-        let item = NSStatusBar.system.statusItem(withLength: 14)
-        let icon = NSImage(named: "MenuBarIcon")
-        icon?.isTemplate = true
-        icon?.size = NSSize(width: 14, height: 14)
-        item.button?.image = icon
-        item.button?.imagePosition = .imageOnly
+
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        if let image = NSImage(named: "MenuBarIcon") {
+            image.isTemplate = true
+            image.size = NSSize(width: 15, height: 15)
+            item.button?.image = image
+            item.button?.imagePosition = .imageOnly
+        }
 
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "打开 Sized".localized, action: #selector(openSettings), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "退出 Sized".localized, action: #selector(quit), keyEquivalent: "q"))
-        menu.items.forEach { $0.target = self }
+        menu.autoenablesItems = false
+
+        let openItem = NSMenuItem(
+            title: "打开 Sized".localized,
+            action: #selector(openSettings),
+            keyEquivalent: ""
+        )
+        let quitItem = NSMenuItem(
+            title: "退出 Sized".localized,
+            action: #selector(quitApp),
+            keyEquivalent: "q"
+        )
+
+        [openItem, quitItem].forEach { $0.target = self }
+        menu.items = [openItem, quitItem]
+
         item.menu = menu
         statusItem = item
     }
@@ -43,7 +58,7 @@ final class StatusItemController {
         SizedManager.shared.openSettings()
     }
 
-    @objc private func quit() {
+    @objc private func quitApp() {
         NSApp.terminate(nil)
     }
 }
