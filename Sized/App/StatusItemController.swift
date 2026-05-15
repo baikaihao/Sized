@@ -5,8 +5,13 @@ final class StatusItemController {
     static let shared = StatusItemController()
 
     private var statusItem: NSStatusItem?
+    private var openSized: (() -> Void)?
 
     private init() {}
+
+    func configure(openSized: @escaping () -> Void) {
+        self.openSized = openSized
+    }
 
     func applyVisibility(_ visible: Bool) {
         if visible {
@@ -55,7 +60,7 @@ final class StatusItemController {
     }
 
     @objc private func openSettings() {
-        SizedManager.shared.openSettings()
+        openSized?()
     }
 
     @objc private func quitApp() {
