@@ -1,0 +1,88 @@
+{
+  "source": "/Users/baikaihao/Desktop/Sized/Sized/SettingsWindow/WheelStylePage.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "显示轮盘",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 15
+        }
+      },
+      {
+        "comment": "",
+        "key": "锁定到屏幕中心",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 21
+        }
+      },
+      {
+        "comment": "",
+        "key": "隐藏无选择时的轮盘",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 22
+        }
+      },
+      {
+        "comment": "",
+        "key": "出现动画",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 33
+        }
+      },
+      {
+        "comment": "",
+        "key": "主色",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 40
+        }
+      },
+      {
+        "comment": "",
+        "key": "使用渐变",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 45
+        }
+      },
+      {
+        "comment": "",
+        "key": "渐变色",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 46
+        }
+      },
+      {
+        "comment": "",
+        "key": "模拟选择",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 84
+        }
+      },
+      {
+        "comment": "",
+        "key": "无选择",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 85
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld%@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 112
+        }
+      }
+    ]
+  },
+  "version": 1
+}

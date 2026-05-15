@@ -1,0 +1,30 @@
+{
+  "/Users/baikaihao/Desktop/Sized/Sized/Models/RadialMenuSlot.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuSlot.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuSlot.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuSlot.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuSlot.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuSlot.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/Models/SettingsStore.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/SettingsStore.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/SettingsStore.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/SettingsStore.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/SettingsStore.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/SettingsStore.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/Models/WindowAction.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/WindowAction.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/WindowAction.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/WindowAction.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/WindowAction.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/WindowAction.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/SettingsWindow/AppRulesPage.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/AppRulesPage.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/AppRulesPage.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/AppRulesPage.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/AppRulesPage.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/AppRulesPage.swiftdeps"
+  }
+}

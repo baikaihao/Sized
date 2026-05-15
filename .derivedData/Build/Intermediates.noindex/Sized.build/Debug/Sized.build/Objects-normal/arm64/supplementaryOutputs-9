@@ -1,0 +1,23 @@
+{
+  "/Users/baikaihao/Desktop/Sized/Sized/WindowActionIndicators/ActivePanel.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ActivePanel.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ActivePanel.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ActivePanel.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ActivePanel.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ActivePanel.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/WindowActionIndicators/RadialMenu/RadialMenuView.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuView.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuView.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuView.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuView.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuView.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/WindowActionIndicators/RadialMenu/RadialMenuViewModel.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuViewModel.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuViewModel.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuViewModel.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuViewModel.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuViewModel.swiftdeps"
+  }
+}

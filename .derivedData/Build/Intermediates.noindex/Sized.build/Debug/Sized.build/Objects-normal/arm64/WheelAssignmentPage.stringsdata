@@ -1,0 +1,72 @@
+{
+  "source": "/Users/baikaihao/Desktop/Sized/Sized/SettingsWindow/WheelAssignmentPage.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "恢复默认分配",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 24
+        }
+      },
+      {
+        "comment": "",
+        "key": "导出",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 33
+        }
+      },
+      {
+        "comment": "",
+        "key": "导入",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 41
+        }
+      },
+      {
+        "comment": "",
+        "key": "尺寸",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 191
+        }
+      },
+      {
+        "comment": "",
+        "key": "显示名称（可选）",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 201
+        }
+      },
+      {
+        "comment": "",
+        "key": "仅修改窗口大小，窗口位置由设置中的锚点规则决定。",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 219
+        }
+      },
+      {
+        "comment": "",
+        "key": "选择该槽位后，Sized 会把当前焦点窗口改为选中的宽高，并尽量保持当前位置关系。",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 226
+        }
+      },
+      {
+        "comment": "",
+        "key": "取消",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 280
+        }
+      }
+    ]
+  },
+  "version": 1
+}

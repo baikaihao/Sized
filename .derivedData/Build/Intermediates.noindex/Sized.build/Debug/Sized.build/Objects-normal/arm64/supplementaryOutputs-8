@@ -1,0 +1,30 @@
+{
+  "/Users/baikaihao/Desktop/Sized/Sized/WindowActionIndicators/RadialMenu/DirectionSelectorCircleSegment.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/DirectionSelectorCircleSegment.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/DirectionSelectorCircleSegment.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/DirectionSelectorCircleSegment.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/DirectionSelectorCircleSegment.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/DirectionSelectorCircleSegment.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/WindowActionIndicators/RadialMenu/DirectionSelectorSquareSegment.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/DirectionSelectorSquareSegment.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/DirectionSelectorSquareSegment.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/DirectionSelectorSquareSegment.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/DirectionSelectorSquareSegment.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/DirectionSelectorSquareSegment.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/WindowActionIndicators/RadialMenu/RadialMenuController.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuController.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuController.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuController.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuController.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuController.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/WindowActionIndicators/RadialMenu/RadialMenuShapes.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuShapes.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuShapes.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuShapes.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuShapes.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/RadialMenuShapes.swiftdeps"
+  }
+}

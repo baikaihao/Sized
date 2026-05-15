@@ -1,0 +1,30 @@
+{
+  "/Users/baikaihao/Desktop/Sized/Sized/SettingsWindow/WheelStylePage.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/WheelStylePage.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/WheelStylePage.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/WheelStylePage.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/WheelStylePage.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/WheelStylePage.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/Utilities/ActiveEventMonitor.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ActiveEventMonitor.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ActiveEventMonitor.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ActiveEventMonitor.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ActiveEventMonitor.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ActiveEventMonitor.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/Utilities/HapticFeedback.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/HapticFeedback.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/HapticFeedback.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/HapticFeedback.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/HapticFeedback.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/HapticFeedback.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/Utilities/PassiveEventMonitor.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PassiveEventMonitor.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PassiveEventMonitor.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PassiveEventMonitor.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PassiveEventMonitor.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PassiveEventMonitor.swiftdeps"
+  }
+}

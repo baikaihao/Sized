@@ -1,0 +1,30 @@
+{
+  "/Users/baikaihao/Desktop/Sized/Sized/Utilities/ScreenUtility.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ScreenUtility.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ScreenUtility.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ScreenUtility.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ScreenUtility.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/ScreenUtility.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/Utilities/VisualEffectView.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/VisualEffectView.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/VisualEffectView.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/VisualEffectView.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/VisualEffectView.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/VisualEffectView.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/WindowActionIndicators/PreviewWindow/PreviewController.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PreviewController.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PreviewController.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PreviewController.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PreviewController.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PreviewController.swiftdeps"
+  },
+  "/Users/baikaihao/Desktop/Sized/Sized/WindowActionIndicators/PreviewWindow/PreviewView.swift" : {
+    "const-values" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PreviewView.swiftconstvalues",
+    "dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PreviewView.d",
+    "diagnostics" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PreviewView.dia",
+    "object" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PreviewView.o",
+    "swift-dependencies" : "/Users/baikaihao/Desktop/Sized/.derivedData/Build/Intermediates.noindex/Sized.build/Debug/Sized.build/Objects-normal/arm64/PreviewView.swiftdeps"
+  }
+}
