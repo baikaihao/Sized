@@ -1,2 +1,0 @@
-Target dependency graph (1 target)
-Target 'Sized' in project 'Sized' (no dependencies)
