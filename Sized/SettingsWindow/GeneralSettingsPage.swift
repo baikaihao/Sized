@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreGraphics
 
 struct GeneralSettingsPage: View {
     @EnvironmentObject private var settings: SettingsStore
@@ -85,6 +86,15 @@ struct GeneralSettingsPage: View {
                 SliderRow(title: "触发延迟", value: $settings.trigger.triggerDelayMilliseconds, range: 0...500, step: 10, suffix: "ms")
                 Toggle("双击触发键激活轮盘", isOn: $settings.trigger.doubleTapTrigger)
                 Toggle("鼠标中键激活轮盘", isOn: $settings.trigger.middleClickTrigger)
+                Toggle("鼠标侧键激活轮盘", isOn: $settings.trigger.sideMouseButtonTrigger)
+
+                if settings.trigger.sideMouseButtonTrigger {
+                    HStack {
+                        Text("侧键信号")
+                        Spacer()
+                        MouseButtonRecorderButton(buttonNumber: $settings.trigger.sideMouseButtonNumber)
+                    }
+                }
             }
 
             SettingsSection(title: "行为设置", systemImage: "cursorarrow.motionlines") {
@@ -173,17 +183,55 @@ private struct TriggerRecorderButton: View {
     @State private var isRecording = false
 
     var body: some View {
-        Button {
-            isRecording.toggle()
-            if isRecording {
-                displayName = "按下快捷键...".localized
+        HStack(spacing: 8) {
+            Button {
+                isRecording.toggle()
+            } label: {
+                Text(isRecording ? "按下快捷键...".localized : displayName)
+                    .frame(minWidth: 150)
             }
-        } label: {
-            Text(displayName)
-                .frame(minWidth: 150)
+            .keyboardShortcut(.space, modifiers: [])
+
+            if isRecording {
+                Button {
+                    isRecording = false
+                } label: {
+                    Image(systemName: "xmark")
+                        .frame(width: 18, height: 18)
+                }
+                .buttonStyle(.borderless)
+                .help("取消录入".localized)
+            }
         }
-        .keyboardShortcut(.space, modifiers: [])
         .background(KeyCaptureView(isRecording: $isRecording, displayName: $displayName).frame(width: 0, height: 0))
+    }
+}
+
+private struct MouseButtonRecorderButton: View {
+    @Binding var buttonNumber: Int
+    @State private var isRecording = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Button {
+                isRecording.toggle()
+            } label: {
+                Text(isRecording ? "按下侧键...".localized : MouseButtonFormatter.displayName(for: buttonNumber))
+                    .frame(minWidth: 150)
+            }
+
+            if isRecording {
+                Button {
+                    isRecording = false
+                } label: {
+                    Image(systemName: "xmark")
+                        .frame(width: 18, height: 18)
+                }
+                .buttonStyle(.borderless)
+                .help("取消录入".localized)
+            }
+        }
+        .background(MouseButtonCaptureView(isRecording: $isRecording, buttonNumber: $buttonNumber).frame(width: 0, height: 0))
     }
 }
 
@@ -260,6 +308,95 @@ private struct KeyCaptureView: NSViewRepresentable {
         override func flagsChanged(with event: NSEvent) {
             delegate?.flagsChanged(event.modifierFlags)
         }
+
+        override func keyDown(with event: NSEvent) {
+            delegate?.keyDown(event)
+        }
+    }
+}
+
+private struct MouseButtonCaptureView: NSViewRepresentable {
+    @Binding var isRecording: Bool
+    @Binding var buttonNumber: Int
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(isRecording: $isRecording, buttonNumber: $buttonNumber)
+    }
+
+    func makeNSView(context: Context) -> MouseCaptureNSView {
+        let view = MouseCaptureNSView()
+        view.delegate = context.coordinator
+        return view
+    }
+
+    func updateNSView(_ nsView: MouseCaptureNSView, context: Context) {
+        if isRecording {
+            DispatchQueue.main.async {
+                nsView.window?.makeFirstResponder(nsView)
+            }
+        }
+        context.coordinator.setRecording(isRecording)
+    }
+
+    final class Coordinator: NSObject, MouseCaptureNSViewDelegate {
+        @Binding var isRecording: Bool
+        @Binding var buttonNumber: Int
+        private var monitor: ActiveEventMonitor?
+
+        init(isRecording: Binding<Bool>, buttonNumber: Binding<Int>) {
+            _isRecording = isRecording
+            _buttonNumber = buttonNumber
+        }
+
+        func setRecording(_ recording: Bool) {
+            recording ? startMonitor() : stopMonitor()
+        }
+
+        func keyDown(_ event: NSEvent) {
+            guard isRecording, event.keyCode == 53 else { return }
+            isRecording = false
+            stopMonitor()
+        }
+
+        private func startMonitor() {
+            guard monitor == nil else { return }
+            let mask = (1 << CGEventType.otherMouseDown.rawValue)
+            let monitor = ActiveEventMonitor(mask: CGEventMask(mask)) { [weak self] type, event in
+                guard type == .otherMouseDown else { return .forward }
+                let button = event.getIntegerValueField(.mouseEventButtonNumber)
+                guard button >= 3 else { return .forward }
+
+                Task { @MainActor in
+                    self?.buttonNumber = Int(button)
+                    self?.isRecording = false
+                    self?.stopMonitor()
+                }
+                return .ignore
+            }
+            self.monitor = monitor
+            if !monitor.start() {
+                self.monitor = nil
+            }
+        }
+
+        private func stopMonitor() {
+            monitor?.stop()
+            monitor = nil
+        }
+
+        deinit {
+            stopMonitor()
+        }
+    }
+
+    protocol MouseCaptureNSViewDelegate: AnyObject {
+        func keyDown(_ event: NSEvent)
+    }
+
+    final class MouseCaptureNSView: NSView {
+        weak var delegate: MouseCaptureNSViewDelegate?
+
+        override var acceptsFirstResponder: Bool { true }
 
         override func keyDown(with event: NSEvent) {
             delegate?.keyDown(event)
@@ -402,6 +539,16 @@ private enum TriggerKeyFormatter {
         case 125: return "Down Arrow"
         case 126: return "Up Arrow"
         default: return nil
+        }
+    }
+}
+
+private enum MouseButtonFormatter {
+    static func displayName(for buttonNumber: Int) -> String {
+        switch buttonNumber {
+        case 3: return "鼠标侧键 1".localized
+        case 4: return "鼠标侧键 2".localized
+        default: return "鼠标按钮 %@".localizedFormat("\(buttonNumber)")
         }
     }
 }

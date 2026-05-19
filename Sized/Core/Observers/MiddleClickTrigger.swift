@@ -12,7 +12,7 @@ final class MiddleClickTrigger {
     weak var delegate: MiddleClickTriggerDelegate?
 
     private var monitor: ActiveEventMonitor?
-    private var isDown = false
+    private var activeButton: Int64?
     private var settings: SettingsStore { .shared }
 
     func start() {
@@ -21,12 +21,12 @@ final class MiddleClickTrigger {
         let monitor = ActiveEventMonitor(mask: CGEventMask(mask)) { [weak self] type, event in
             guard let self else { return .forward }
             let button = event.getIntegerValueField(.mouseEventButtonNumber)
-            guard button == 2 else { return .forward }
+            guard self.isConfiguredTriggerButton(button) else { return .forward }
 
             DispatchQueue.main.async {
                 self.handle(type: type, button: button)
             }
-            return self.settings.trigger.middleClickTrigger ? .ignore : .forward
+            return .ignore
         }
         self.monitor = monitor
         if !monitor.start() {
@@ -38,24 +38,35 @@ final class MiddleClickTrigger {
     func stop() {
         monitor?.stop()
         monitor = nil
-        isDown = false
+        activeButton = nil
     }
 
     private func handle(type: CGEventType, button: Int64) {
-        guard settings.trigger.middleClickTrigger, button == 2 else { return }
+        guard isConfiguredTriggerButton(button) else { return }
 
-        if type == .otherMouseDown, !isDown {
-            isDown = true
+        if type == .otherMouseDown, activeButton == nil {
+            activeButton = button
             DispatchQueue.main.asyncAfter(deadline: .now() + settings.trigger.triggerDelayMilliseconds / 1000) { [weak self] in
-                guard let self, self.isDown else { return }
+                guard let self, self.activeButton == button else { return }
                 self.delegate?.middleClickDidBegin()
             }
             return
         }
 
-        if type == .otherMouseUp, isDown {
-            isDown = false
+        if type == .otherMouseUp, activeButton == button {
+            activeButton = nil
             delegate?.middleClickDidEnd(confirm: true)
         }
+    }
+
+    private func isConfiguredTriggerButton(_ button: Int64) -> Bool {
+        let trigger = settings.trigger
+        if trigger.middleClickTrigger, button == 2 {
+            return true
+        }
+        if trigger.sideMouseButtonTrigger, button == Int64(trigger.sideMouseButtonNumber) {
+            return true
+        }
+        return false
     }
 }

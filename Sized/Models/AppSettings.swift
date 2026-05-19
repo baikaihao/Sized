@@ -179,6 +179,8 @@ struct TriggerSettings: Codable, Equatable {
     var triggerDelayMilliseconds: Double
     var doubleTapTrigger: Bool
     var middleClickTrigger: Bool
+    var sideMouseButtonTrigger: Bool
+    var sideMouseButtonNumber: Int
     var timeoutSeconds: Double
 
     static let `default` = TriggerSettings(
@@ -188,6 +190,8 @@ struct TriggerSettings: Codable, Equatable {
         triggerDelayMilliseconds: 0,
         doubleTapTrigger: false,
         middleClickTrigger: true,
+        sideMouseButtonTrigger: false,
+        sideMouseButtonNumber: 3,
         timeoutSeconds: 5
     )
 }
@@ -200,6 +204,8 @@ extension TriggerSettings {
         case triggerDelayMilliseconds
         case doubleTapTrigger
         case middleClickTrigger
+        case sideMouseButtonTrigger
+        case sideMouseButtonNumber
         case timeoutSeconds
     }
 
@@ -211,6 +217,9 @@ extension TriggerSettings {
         triggerDelayMilliseconds = try container.decodeIfPresent(Double.self, forKey: .triggerDelayMilliseconds) ?? Self.default.triggerDelayMilliseconds
         doubleTapTrigger = try container.decodeIfPresent(Bool.self, forKey: .doubleTapTrigger) ?? Self.default.doubleTapTrigger
         middleClickTrigger = try container.decodeIfPresent(Bool.self, forKey: .middleClickTrigger) ?? Self.default.middleClickTrigger
+        sideMouseButtonTrigger = try container.decodeIfPresent(Bool.self, forKey: .sideMouseButtonTrigger) ?? Self.default.sideMouseButtonTrigger
+        let decodedSideButton = try container.decodeIfPresent(Int.self, forKey: .sideMouseButtonNumber) ?? Self.default.sideMouseButtonNumber
+        sideMouseButtonNumber = max(3, decodedSideButton)
         timeoutSeconds = try container.decodeIfPresent(Double.self, forKey: .timeoutSeconds) ?? Self.default.timeoutSeconds
     }
 
@@ -222,6 +231,8 @@ extension TriggerSettings {
         try container.encode(triggerDelayMilliseconds, forKey: .triggerDelayMilliseconds)
         try container.encode(doubleTapTrigger, forKey: .doubleTapTrigger)
         try container.encode(middleClickTrigger, forKey: .middleClickTrigger)
+        try container.encode(sideMouseButtonTrigger, forKey: .sideMouseButtonTrigger)
+        try container.encode(sideMouseButtonNumber, forKey: .sideMouseButtonNumber)
         try container.encode(timeoutSeconds, forKey: .timeoutSeconds)
     }
 }

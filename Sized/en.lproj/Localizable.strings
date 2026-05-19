@@ -106,6 +106,8 @@
 "触发延迟" = "Trigger delay";
 "双击触发键激活轮盘" = "Double tap trigger key to activate wheel";
 "鼠标中键激活轮盘" = "Middle click activates wheel";
+"鼠标侧键激活轮盘" = "Mouse side button activates wheel";
+"侧键信号" = "Side button signal";
 "行为设置" = "Behavior Settings";
 "确认方式" = "Confirmation mode";
 "窗口调整动画" = "Window resize animation";
@@ -120,6 +122,11 @@
 "确定要重置所有设置吗？" = "Are you sure you want to reset all settings?";
 "版本 %@ (%@)" = "Version %@ (%@)";
 "按下快捷键..." = "Press shortcut...";
+"按下侧键..." = "Press side button...";
+"取消录入" = "Cancel recording";
+"鼠标侧键 1" = "Mouse Side Button 1";
+"鼠标侧键 2" = "Mouse Side Button 2";
+"鼠标按钮 %@" = "Mouse Button %@";
 
 "系统" = "System";
 "自定义" = "Custom";
