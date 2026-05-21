@@ -188,31 +188,76 @@ private struct AssignmentDetailPanel: View {
     var body: some View {
         VStack(spacing: 16) {
             SettingsSection(title: "%@ 槽位".localizedFormat(slot.displayName), systemImage: slot.systemImage) {
-                Picker("尺寸", selection: $action.kind) {
-                    ForEach(SizePresetCategory.allCases) { category in
+                Picker("模式", selection: $action.mode) {
+                    ForEach(WindowActionMode.allCases) { mode in
+                        Text(mode.displayName).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: action.mode) { _, newMode in
+                    normalizeAction(for: newMode)
+                }
+
+                TextField("显示名称（可选）", text: $action.customLabel)
+                    .textFieldStyle(.roundedBorder)
+
+                actionSummary
+            }
+
+            modeConfiguration
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var actionSummary: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label(action.displayName, systemImage: action.systemImage)
+                    .font(.headline)
+                Spacer()
+            }
+            Text(action.sizeDisplayName)
+                .font(.callout.monospacedDigit())
+                .foregroundStyle(.secondary)
+        }
+        .padding(.top, 2)
+    }
+
+    @ViewBuilder
+    private var modeConfiguration: some View {
+        switch action.mode {
+        case .fixedSize:
+            fixedSizeConfiguration
+        case .screenLayout:
+            screenLayoutConfiguration
+        case .relativeScale:
+            relativeScaleConfiguration
+        case .windowCommand:
+            windowCommandConfiguration
+        case .noAction:
+            noActionConfiguration
+        }
+    }
+
+    private var fixedSizeConfiguration: some View {
+        Group {
+            SettingsSection(title: "固定尺寸", systemImage: WindowActionMode.fixedSize.systemImage) {
+                Picker("尺寸", selection: $action.fixedSizeKind) {
+                    ForEach(SizePresetCategory.allCases.filter { $0 != .utility }) { category in
                         Section(category.displayName) {
-                            ForEach(SizePresetKind.selectable.filter { $0.category == category }) { kind in
+                            ForEach(SizePresetKind.fixedSizeSelectable.filter { $0.category == category }) { kind in
                                 Text(kind.displayName).tag(kind)
                             }
                         }
                     }
                 }
 
-                TextField("显示名称（可选）", text: $action.customLabel)
-                    .textFieldStyle(.roundedBorder)
-
-                HStack {
-                    Text(action.kind.displayName.localized)
-                        .font(.headline)
-                    Spacer()
-                }
-                Text(action.sizeDisplayName)
-                    .font(.callout.monospacedDigit())
+                Label("选择该槽位后，Sized 会把当前焦点窗口改为选中的宽高。", systemImage: "info.circle")
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
-                    .padding(.top, 4)
             }
 
-            if action.kind == .custom {
+            if action.fixedSizeKind == .custom {
                 SettingsSection(title: "自定义尺寸", systemImage: "slider.horizontal.3") {
                     NumericField(title: "宽度", value: $action.customSize.width)
                     NumericField(title: "高度", value: $action.customSize.height)
@@ -221,14 +266,109 @@ private struct AssignmentDetailPanel: View {
                         .foregroundStyle(.secondary)
                 }
             }
+        }
+    }
 
-            SettingsSection(title: "调整规则", systemImage: "arrow.up.left.and.down.right.magnifyingglass") {
-                Label("选择该槽位后，Sized 会把当前焦点窗口改为选中的宽高，并尽量保持当前位置关系。", systemImage: "info.circle")
+    private var screenLayoutConfiguration: some View {
+        SettingsSection(title: "屏幕布局", systemImage: WindowActionMode.screenLayout.systemImage) {
+            Picker("布局", selection: $action.screenLayout) {
+                ForEach(ScreenLayoutAction.allCases) { layout in
+                    Label(layout.displayName, systemImage: layout.systemImage).tag(layout)
+                }
+            }
+
+            Label(screenLayoutDescription, systemImage: "info.circle")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var relativeScaleConfiguration: some View {
+        SettingsSection(title: "相对缩放", systemImage: WindowActionMode.relativeScale.systemImage) {
+            Picker("方向", selection: $action.scaleDirection) {
+                ForEach(RelativeScaleDirection.allCases) { direction in
+                    Label(direction.displayName, systemImage: direction.systemImage).tag(direction)
+                }
+            }
+            .onChange(of: action.scaleDirection) { _, newDirection in
+                action.scalePercent = RadialMenuAction.clampedScalePercent(action.scalePercent, direction: newDirection)
+            }
+
+            Picker("锚点", selection: $action.scaleAnchor) {
+                ForEach(RelativeScaleAnchor.allCases) { anchor in
+                    Text(anchor.displayName).tag(anchor)
+                }
+            }
+
+            ScalePercentRow(direction: action.scaleDirection, percent: $action.scalePercent)
+
+            Label("基于当前窗口大小按比例变化；放大超过可见工作区时，会铺满可见区域。", systemImage: "info.circle")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var windowCommandConfiguration: some View {
+        SettingsSection(title: "窗口命令", systemImage: WindowActionMode.windowCommand.systemImage) {
+            Picker("命令", selection: $action.windowCommand) {
+                ForEach(WindowCommandAction.allCases) { command in
+                    Label(command.displayName, systemImage: command.systemImage).tag(command)
+                }
+            }
+
+            if action.windowCommand.isDestructive {
+                Label("选择该槽位时，当前焦点窗口会显示红色遮罩作为警示。", systemImage: "exclamationmark.triangle")
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+            } else {
+                Label("命令会作用于当前焦点窗口或其所属应用。", systemImage: "info.circle")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
         }
-        .frame(maxWidth: .infinity)
+    }
+
+    private var noActionConfiguration: some View {
+        SettingsSection(title: "无操作", systemImage: WindowActionMode.noAction.systemImage) {
+            Label("选择该槽位后不会调整窗口，也不会执行命令。", systemImage: "info.circle")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var screenLayoutDescription: String {
+        switch action.screenLayout {
+        case .fillVisible:
+            "铺满当前屏幕的可见工作区，不进入系统全屏。".localized
+        case .systemFullScreen:
+            "触发窗口绿色按钮；失败时不会自动改为铺满可见区域。".localized
+        case .leftHalf, .rightHalf:
+            "按当前屏幕可见工作区分成左右两栏，并移动到对应位置。".localized
+        case .leftThird, .centerThird, .rightThird:
+            "按当前屏幕可见工作区分成左中右三栏，并移动到对应位置。".localized
+        case .topLeftQuarter, .topRightQuarter, .bottomLeftQuarter, .bottomRightQuarter:
+            "按当前屏幕可见工作区分成四个角落，并移动到对应位置。".localized
+        }
+    }
+
+    private func normalizeAction(for mode: WindowActionMode) {
+        switch mode {
+        case .fixedSize:
+            if action.fixedSizeKind.fixedSize == nil && action.fixedSizeKind != .custom {
+                action.fixedSizeKind = .large
+            }
+        case .screenLayout:
+            break
+        case .relativeScale:
+            action.scalePercent = RadialMenuAction.clampedScalePercent(action.scalePercent, direction: action.scaleDirection)
+            if action.scaleAnchor == .center {
+                action.scaleAnchor = RelativeScaleAnchor.defaultAnchor(for: slot)
+            }
+        case .windowCommand:
+            break
+        case .noAction:
+            break
+        }
     }
 }
 
@@ -243,6 +383,37 @@ private struct NumericField: View {
             TextField(title.localized, value: $value, format: .number.precision(.fractionLength(0...1)))
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 120)
+        }
+    }
+}
+
+private struct ScalePercentRow: View {
+    var direction: RelativeScaleDirection
+    @Binding var percent: Double
+
+    private var clampedPercent: Binding<Double> {
+        Binding(
+            get: { RadialMenuAction.clampedScalePercent(percent, direction: direction) },
+            set: { percent = RadialMenuAction.clampedScalePercent($0, direction: direction) }
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("比例".localized)
+                Spacer()
+                TextField("比例".localized, value: clampedPercent, format: .number.precision(.fractionLength(0)))
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 78)
+                Text("%")
+                    .foregroundStyle(.secondary)
+            }
+
+            Slider(value: clampedPercent, in: direction.percentRange, step: 5)
+        }
+        .onAppear {
+            percent = RadialMenuAction.clampedScalePercent(percent, direction: direction)
         }
     }
 }

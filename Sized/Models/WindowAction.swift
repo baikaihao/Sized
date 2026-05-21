@@ -262,6 +262,10 @@ enum SizePresetKind: String, CaseIterable, Codable, Identifiable {
     }
 
     static var selectable: [SizePresetKind] {
+        fixedSizeSelectable
+    }
+
+    static var fixedSizeSelectable: [SizePresetKind] {
         [
             .ultrawide840x360,
             .ultrawide980x420,
@@ -313,10 +317,7 @@ enum SizePresetKind: String, CaseIterable, Codable, Identifiable {
             .square720x720,
             .square,
             .square1200x1200,
-            .custom,
-            .restoreInitial,
-            .undo,
-            .none
+            .custom
         ]
     }
 }
@@ -333,32 +334,387 @@ struct CustomWindowSize: Codable, Equatable {
     static let `default` = CustomWindowSize(width: 1280, height: 800)
 }
 
+enum WindowActionMode: String, CaseIterable, Codable, Identifiable {
+    case fixedSize
+    case screenLayout
+    case relativeScale
+    case windowCommand
+    case noAction
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .fixedSize: "固定尺寸".localized
+        case .screenLayout: "屏幕布局".localized
+        case .relativeScale: "相对缩放".localized
+        case .windowCommand: "窗口命令".localized
+        case .noAction: "无操作".localized
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .fixedSize: "rectangle.resize"
+        case .screenLayout: "rectangle.inset.filled"
+        case .relativeScale: "arrow.up.left.and.down.right.magnifyingglass"
+        case .windowCommand: "macwindow.badge.plus"
+        case .noAction: "slash.circle"
+        }
+    }
+}
+
+enum ScreenLayoutAction: String, CaseIterable, Codable, Identifiable {
+    case fillVisible
+    case systemFullScreen
+    case leftHalf
+    case rightHalf
+    case leftThird
+    case centerThird
+    case rightThird
+    case topLeftQuarter
+    case topRightQuarter
+    case bottomLeftQuarter
+    case bottomRightQuarter
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .fillVisible: "铺满可见区域".localized
+        case .systemFullScreen: "进入系统全屏".localized
+        case .leftHalf: "左半屏".localized
+        case .rightHalf: "右半屏".localized
+        case .leftThird: "左三分之一".localized
+        case .centerThird: "中三分之一".localized
+        case .rightThird: "右三分之一".localized
+        case .topLeftQuarter: "左上四分之一".localized
+        case .topRightQuarter: "右上四分之一".localized
+        case .bottomLeftQuarter: "左下四分之一".localized
+        case .bottomRightQuarter: "右下四分之一".localized
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .fillVisible: "rectangle.expand.vertical"
+        case .systemFullScreen: "arrow.up.left.and.arrow.down.right"
+        case .leftHalf: "rectangle.leadinghalf.filled"
+        case .rightHalf: "rectangle.trailinghalf.filled"
+        case .leftThird: "rectangle.split.3x1"
+        case .centerThird: "rectangle.center.inset.filled"
+        case .rightThird: "rectangle.split.3x1"
+        case .topLeftQuarter: "arrow.up.left.square"
+        case .topRightQuarter: "arrow.up.right.square"
+        case .bottomLeftQuarter: "arrow.down.left.square"
+        case .bottomRightQuarter: "arrow.down.right.square"
+        }
+    }
+}
+
+enum RelativeScaleDirection: String, CaseIterable, Codable, Identifiable {
+    case enlarge
+    case shrink
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .enlarge: "放大".localized
+        case .shrink: "缩小".localized
+        }
+    }
+
+    var percentRange: ClosedRange<Double> {
+        switch self {
+        case .enlarge: 5...200
+        case .shrink: 5...95
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .enlarge: "plus.magnifyingglass"
+        case .shrink: "minus.magnifyingglass"
+        }
+    }
+}
+
+enum RelativeScaleAnchor: String, CaseIterable, Codable, Identifiable {
+    case topLeft
+    case topRight
+    case center
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .topLeft: "左上".localized
+        case .topRight: "右上".localized
+        case .center: "中心".localized
+        }
+    }
+
+    static func defaultAnchor(for slot: RadialMenuSlot) -> RelativeScaleAnchor {
+        switch slot {
+        case .topLeft, .left, .bottomLeft:
+            .topLeft
+        case .topRight, .right, .bottomRight:
+            .topRight
+        case .top, .center, .bottom:
+            .center
+        }
+    }
+}
+
+enum WindowCommandAction: String, CaseIterable, Codable, Identifiable {
+    case minimize
+    case closeWindow
+    case quitApplication
+    case restoreInitial
+    case undo
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .minimize: "最小化".localized
+        case .closeWindow: "关闭窗口".localized
+        case .quitApplication: "退出应用".localized
+        case .restoreInitial: "恢复初始尺寸".localized
+        case .undo: "撤销上一次尺寸".localized
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .minimize: "minus.square"
+        case .closeWindow: "xmark.square"
+        case .quitApplication: "power"
+        case .restoreInitial: "arrow.uturn.backward"
+        case .undo: "arrow.counterclockwise"
+        }
+    }
+
+    var isDestructive: Bool {
+        switch self {
+        case .closeWindow, .quitApplication:
+            true
+        case .minimize, .restoreInitial, .undo:
+            false
+        }
+    }
+}
+
 struct RadialMenuAction: Codable, Equatable, Identifiable {
     var id: UUID
-    var kind: SizePresetKind
+    var mode: WindowActionMode
+    var fixedSizeKind: SizePresetKind
     var customLabel: String
     var customSize: CustomWindowSize
+    var screenLayout: ScreenLayoutAction
+    var scaleDirection: RelativeScaleDirection
+    var scalePercent: Double
+    var scaleAnchor: RelativeScaleAnchor
+    var windowCommand: WindowCommandAction
 
-    init(id: UUID = UUID(), kind: SizePresetKind, customLabel: String = "", customSize: CustomWindowSize = .default) {
+    init(
+        id: UUID = UUID(),
+        mode: WindowActionMode,
+        fixedSizeKind: SizePresetKind = .large,
+        customLabel: String = "",
+        customSize: CustomWindowSize = .default,
+        screenLayout: ScreenLayoutAction = .fillVisible,
+        scaleDirection: RelativeScaleDirection = .enlarge,
+        scalePercent: Double = 25,
+        scaleAnchor: RelativeScaleAnchor = .center,
+        windowCommand: WindowCommandAction = .minimize
+    ) {
         self.id = id
-        self.kind = kind
+        self.mode = mode
+        self.fixedSizeKind = fixedSizeKind
         self.customLabel = customLabel
         self.customSize = customSize
+        self.screenLayout = screenLayout
+        self.scaleDirection = scaleDirection
+        self.scalePercent = Self.clampedScalePercent(scalePercent, direction: scaleDirection)
+        self.scaleAnchor = scaleAnchor
+        self.windowCommand = windowCommand
+    }
+
+    init(id: UUID = UUID(), kind: SizePresetKind, customLabel: String = "", customSize: CustomWindowSize = .default) {
+        switch kind {
+        case .none:
+            self.init(id: id, mode: .noAction, customLabel: customLabel, customSize: customSize)
+        case .restoreInitial:
+            self.init(id: id, mode: .windowCommand, customLabel: customLabel, customSize: customSize, windowCommand: .restoreInitial)
+        case .undo:
+            self.init(id: id, mode: .windowCommand, customLabel: customLabel, customSize: customSize, windowCommand: .undo)
+        default:
+            self.init(id: id, mode: .fixedSize, fixedSizeKind: kind, customLabel: customLabel, customSize: customSize)
+        }
     }
 
     var displayName: String {
-        customLabel.isEmpty ? kind.displayName : customLabel
+        customLabel.isEmpty ? defaultDisplayName : customLabel
+    }
+
+    var defaultDisplayName: String {
+        switch mode {
+        case .fixedSize:
+            fixedSizeKind.displayName
+        case .screenLayout:
+            screenLayout.displayName
+        case .relativeScale:
+            "\(scaleDirection.displayName) \(Int(scalePercent))%"
+        case .windowCommand:
+            windowCommand.displayName
+        case .noAction:
+            "无操作".localized
+        }
     }
 
     var sizeDisplayName: String {
-        if kind == .custom {
-            return "\(Int(customSize.width)) x \(Int(customSize.height))"
+        switch mode {
+        case .fixedSize:
+            if fixedSizeKind == .custom {
+                return "\(Int(customSize.width)) x \(Int(customSize.height))"
+            }
+            if let size = fixedSizeKind.fixedSize {
+                return "\(Int(size.width)) x \(Int(size.height))"
+            }
+            return fixedSizeKind.displayName
+        case .screenLayout:
+            return "屏幕布局".localized
+        case .relativeScale:
+            return scaleAnchor.displayName
+        case .windowCommand:
+            return "窗口命令".localized
+        case .noAction:
+            return "-"
         }
-        if let size = kind.fixedSize {
-            return "\(Int(size.width)) x \(Int(size.height))"
-        }
-        return kind.displayName
     }
 
-    var systemImage: String { kind.systemImage }
+    var compactDisplayName: String {
+        switch mode {
+        case .fixedSize:
+            if fixedSizeKind == .custom {
+                return "\(Int(customSize.width))x\(Int(customSize.height))"
+            }
+            if let size = fixedSizeKind.fixedSize {
+                return "\(Int(size.width))x\(Int(size.height))"
+            }
+            return displayName
+        case .screenLayout:
+            switch screenLayout {
+            case .fillVisible: return "铺满".localized
+            case .systemFullScreen: return "全屏".localized
+            case .leftHalf: return "左1/2".localized
+            case .rightHalf: return "右1/2".localized
+            case .leftThird: return "左1/3".localized
+            case .centerThird: return "中1/3".localized
+            case .rightThird: return "右1/3".localized
+            case .topLeftQuarter: return "左上".localized
+            case .topRightQuarter: return "右上".localized
+            case .bottomLeftQuarter: return "左下".localized
+            case .bottomRightQuarter: return "右下".localized
+            }
+        case .relativeScale:
+            return "\(scaleDirection.displayName) \(Int(scalePercent))%"
+        case .windowCommand:
+            switch windowCommand {
+            case .minimize: return "最小化".localized
+            case .closeWindow: return "关闭".localized
+            case .quitApplication: return "退出".localized
+            case .restoreInitial: return "恢复".localized
+            case .undo: return "撤销".localized
+            }
+        case .noAction:
+            return "无".localized
+        }
+    }
+
+    var systemImage: String {
+        switch mode {
+        case .fixedSize:
+            fixedSizeKind.systemImage
+        case .screenLayout:
+            screenLayout.systemImage
+        case .relativeScale:
+            scaleDirection.systemImage
+        case .windowCommand:
+            windowCommand.systemImage
+        case .noAction:
+            WindowActionMode.noAction.systemImage
+        }
+    }
+
+    var isNoAction: Bool {
+        mode == .noAction
+    }
+
+    var isDestructiveCommand: Bool {
+        mode == .windowCommand && windowCommand.isDestructive
+    }
+
+    static func clampedScalePercent(_ percent: Double, direction: RelativeScaleDirection) -> Double {
+        min(max(percent, direction.percentRange.lowerBound), direction.percentRange.upperBound)
+    }
+}
+
+extension RadialMenuAction {
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case mode
+        case fixedSizeKind
+        case customLabel
+        case customSize
+        case screenLayout
+        case scaleDirection
+        case scalePercent
+        case scaleAnchor
+        case windowCommand
+        case kind
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        let customLabel = try container.decodeIfPresent(String.self, forKey: .customLabel) ?? ""
+        let customSize = try container.decodeIfPresent(CustomWindowSize.self, forKey: .customSize) ?? .default
+
+        if let mode = try container.decodeIfPresent(WindowActionMode.self, forKey: .mode) {
+            let scaleDirection = try container.decodeIfPresent(RelativeScaleDirection.self, forKey: .scaleDirection) ?? .enlarge
+            self.init(
+                id: id,
+                mode: mode,
+                fixedSizeKind: try container.decodeIfPresent(SizePresetKind.self, forKey: .fixedSizeKind) ?? .large,
+                customLabel: customLabel,
+                customSize: customSize,
+                screenLayout: try container.decodeIfPresent(ScreenLayoutAction.self, forKey: .screenLayout) ?? .fillVisible,
+                scaleDirection: scaleDirection,
+                scalePercent: try container.decodeIfPresent(Double.self, forKey: .scalePercent) ?? 25,
+                scaleAnchor: try container.decodeIfPresent(RelativeScaleAnchor.self, forKey: .scaleAnchor) ?? .center,
+                windowCommand: try container.decodeIfPresent(WindowCommandAction.self, forKey: .windowCommand) ?? .minimize
+            )
+            return
+        }
+
+        let legacyKind = try container.decodeIfPresent(SizePresetKind.self, forKey: .kind) ?? .none
+        self.init(id: id, kind: legacyKind, customLabel: customLabel, customSize: customSize)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(mode, forKey: .mode)
+        try container.encode(fixedSizeKind, forKey: .fixedSizeKind)
+        try container.encode(customLabel, forKey: .customLabel)
+        try container.encode(customSize, forKey: .customSize)
+        try container.encode(screenLayout, forKey: .screenLayout)
+        try container.encode(scaleDirection, forKey: .scaleDirection)
+        try container.encode(Self.clampedScalePercent(scalePercent, direction: scaleDirection), forKey: .scalePercent)
+        try container.encode(scaleAnchor, forKey: .scaleAnchor)
+        try container.encode(windowCommand, forKey: .windowCommand)
+    }
 }

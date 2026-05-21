@@ -127,7 +127,7 @@ final class SizedManager: ObservableObject {
 
         guard confirm, let slot else { return }
         let action = activeAssignments[slot]
-        guard action.kind != .none else { return }
+        guard !action.isNoAction else { return }
 
         if let frontmostApplication {
             frontmostApplication.activate(options: [])
@@ -143,8 +143,8 @@ final class SizedManager: ObservableObject {
         let hasWindow = windowActionEngine.hasFocusedWindow()
         indicatorService.updateRadialMenu(selectedSlot: slot, action: action, assignments: activeAssignments, hasTargetWindow: hasWindow)
 
-        if let action, let frame = windowActionEngine.targetFrame(for: action) {
-            indicatorService.preview.show(frame: WindowUtility.axRectToAppKit(frame))
+        if let action, let preview = windowActionEngine.preview(for: action) {
+            indicatorService.preview.show(frame: WindowUtility.axRectToAppKit(preview.frame), style: preview.style)
         } else {
             indicatorService.preview.hide()
         }

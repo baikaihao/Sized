@@ -7,18 +7,19 @@ final class PreviewController {
     private var isVisible = false
     private var settings: SettingsStore { .shared }
 
-    func show(frame: CGRect) {
-        guard settings.behavior.showPreview else { return }
-        let inset = CGFloat(settings.behavior.previewPadding)
+    func show(frame: CGRect, style: WindowActionPreviewStyle = .standard) {
+        guard settings.behavior.showPreview || style == .danger else { return }
+        let inset = style == .danger ? 0 : CGFloat(settings.behavior.previewPadding)
         let displayFrame = frame.insetBy(dx: inset, dy: inset)
         let speed = settings.behavior.previewAnimationSpeed
 
         let wasVisible = isVisible
         let panel = panel ?? makePanel()
+        let rootView = PreviewView(settings: settings.behavior, style: style)
 
         if !wasVisible {
             panel.setFrame(displayFrame, display: false)
-            panel.contentView = NSHostingView(rootView: PreviewView(settings: settings.behavior))
+            panel.contentView = NSHostingView(rootView: rootView)
             panel.alphaValue = 0
             panel.orderFrontRegardless()
             isVisible = true
@@ -30,6 +31,12 @@ final class PreviewController {
                 panel.animator().alphaValue = 1
             }
         } else {
+            if let hostingView = panel.contentView as? NSHostingView<PreviewView> {
+                hostingView.rootView = rootView
+            } else {
+                panel.contentView = NSHostingView(rootView: rootView)
+            }
+
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = speed
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
@@ -48,11 +55,14 @@ final class PreviewController {
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             panel.animator().alphaValue = 0
         }, completionHandler: { [weak self] in
-            guard let self, !self.isVisible else { return }
-            panel.orderOut(nil)
-            panel.alphaValue = 1
-            if self.panel === panel {
-                self.panel = nil
+            guard let controller = self else { return }
+            Task { @MainActor [controller, panel] in
+                guard !controller.isVisible else { return }
+                panel.orderOut(nil)
+                panel.alphaValue = 1
+                if controller.panel === panel {
+                    controller.panel = nil
+                }
             }
         })
     }

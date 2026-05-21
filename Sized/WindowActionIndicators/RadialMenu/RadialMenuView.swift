@@ -208,24 +208,7 @@ struct RadialMenuView: View {
     }
 
     private func compactLabel(for action: RadialMenuAction) -> String {
-        if action.kind == .custom {
-            return "\(Int(action.customSize.width))x\(Int(action.customSize.height))"
-        }
-
-        if let size = action.kind.fixedSize {
-            return "\(Int(size.width))x\(Int(size.height))"
-        }
-
-        switch action.kind {
-        case .restoreInitial:
-            return "恢复".localized
-        case .undo:
-            return "撤销".localized
-        case .none:
-            return "无".localized
-        default:
-            return action.displayName
-        }
+        action.compactDisplayName
     }
 
     private func labelOffset(for slot: RadialMenuSlot) -> CGSize {

@@ -178,6 +178,28 @@ enum WindowUtility {
         return AXUIElementPerformAction(zoomButton, kAXPressAction as CFString) == .success
     }
 
+    static func performFullScreen(for window: AXUIElement) -> Bool {
+        if performButton(attribute: kAXFullScreenButtonAttribute, for: window) {
+            return true
+        }
+        return performZoom(for: window)
+    }
+
+    static func performClose(for window: AXUIElement) -> Bool {
+        performButton(attribute: kAXCloseButtonAttribute, for: window)
+    }
+
+    private static func performButton(attribute: String, for window: AXUIElement) -> Bool {
+        var buttonValue: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(window, attribute as CFString, &buttonValue) == .success,
+              let buttonValue,
+              CFGetTypeID(buttonValue) == AXUIElementGetTypeID()
+        else { return false }
+
+        let button = buttonValue as! AXUIElement
+        return AXUIElementPerformAction(button, kAXPressAction as CFString) == .success
+    }
+
     static func visibleAXFrame(for screen: NSScreen) -> CGRect {
         appKitRectToAX(screen.visibleFrame)
     }

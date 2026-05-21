@@ -2,6 +2,16 @@ import AppKit
 import ApplicationServices
 import OSLog
 
+enum WindowActionPreviewStyle {
+    case standard
+    case danger
+}
+
+struct WindowActionPreview {
+    var frame: CGRect
+    var style: WindowActionPreviewStyle
+}
+
 @MainActor
 final class WindowActionEngine {
     static let shared = WindowActionEngine()
@@ -22,6 +32,17 @@ final class WindowActionEngine {
         return targetFrame(for: action, focusedWindow: focusedWindow)
     }
 
+    func preview(for action: RadialMenuAction) -> WindowActionPreview? {
+        guard let focusedWindow = WindowUtility.focusedWindow() else { return nil }
+
+        if action.isDestructiveCommand {
+            return WindowActionPreview(frame: focusedWindow.frame, style: .danger)
+        }
+
+        guard let frame = targetFrame(for: action, focusedWindow: focusedWindow) else { return nil }
+        return WindowActionPreview(frame: frame, style: .standard)
+    }
+
     @discardableResult
     func perform(_ action: RadialMenuAction) -> Bool {
         AccessibilityManager.shared.refresh()
@@ -33,21 +54,19 @@ final class WindowActionEngine {
         guard let focusedWindow = WindowUtility.focusedWindow() else { return false }
         let currentFrame = focusedWindow.frame
 
-        switch action.kind {
-        case .none:
+        switch action.mode {
+        case .noAction:
             return true
-        case .restoreInitial:
-            guard let initialFrame = resizeContext.initialFrame else { return false }
-            resizeContext.lastFrame = currentFrame
-            return applyFrame(initialFrame, from: currentFrame, to: focusedWindow.windowElement)
-        case .undo:
-            guard let lastFrame = resizeContext.lastFrame else { return false }
-            resizeContext.lastFrame = currentFrame
-            return applyFrame(lastFrame, from: currentFrame, to: focusedWindow.windowElement)
-        default:
+        case .windowCommand:
+            return performWindowCommand(action.windowCommand, focusedWindow: focusedWindow, currentFrame: currentFrame)
+        case .screenLayout where action.screenLayout == .systemFullScreen:
+            resizeContext.remember(pid: focusedWindow.application.processIdentifier, frame: currentFrame)
+            return WindowUtility.performFullScreen(for: focusedWindow.windowElement)
+        case .fixedSize, .screenLayout, .relativeScale:
             guard let targetFrame = targetFrame(for: action, focusedWindow: focusedWindow) else { return false }
             resizeContext.remember(pid: focusedWindow.application.processIdentifier, frame: currentFrame)
-            return applyFrame(targetFrame.integral, from: currentFrame, to: focusedWindow.windowElement)
+            let allowConstrainedResult = action.mode == .relativeScale && action.scaleDirection == .shrink
+            return applyFrame(targetFrame.integral, from: currentFrame, to: focusedWindow.windowElement, allowConstrainedResult: allowConstrainedResult)
         }
     }
 
@@ -56,19 +75,111 @@ final class WindowActionEngine {
         let screen = WindowUtility.screen(forAXFrame: current)
         let visible = WindowUtility.visibleAXFrame(for: screen)
 
-        switch action.kind {
-        case .none:
+        switch action.mode {
+        case .noAction:
             return nil
-        case .restoreInitial:
-            return resizeContext.initialFrame
-        case .undo:
-            return resizeContext.lastFrame
-        case .custom:
-            return frame(byResizing: current, to: CGSize(width: action.customSize.width, height: action.customSize.height), within: visible)
-        default:
-            guard let preset = action.kind.fixedSize else { return nil }
+        case .windowCommand:
+            switch action.windowCommand {
+            case .restoreInitial:
+                return resizeContext.initialFrame
+            case .undo:
+                return resizeContext.lastFrame
+            case .minimize, .closeWindow, .quitApplication:
+                return nil
+            }
+        case .fixedSize:
+            if action.fixedSizeKind == .custom {
+                return frame(byResizing: current, to: CGSize(width: action.customSize.width, height: action.customSize.height), within: visible)
+            }
+            guard let preset = action.fixedSizeKind.fixedSize else { return nil }
             return frame(byResizing: current, to: CGSize(width: preset.width, height: preset.height), within: visible)
+        case .screenLayout:
+            return frame(for: action.screenLayout, within: visible)
+        case .relativeScale:
+            return frame(byScaling: current, action: action, within: visible)
         }
+    }
+
+    private func performWindowCommand(_ command: WindowCommandAction, focusedWindow: FocusedWindow, currentFrame: CGRect) -> Bool {
+        switch command {
+        case .minimize:
+            return WindowUtility.setMinimized(true, for: focusedWindow.windowElement)
+        case .closeWindow:
+            return WindowUtility.performClose(for: focusedWindow.windowElement)
+        case .quitApplication:
+            return focusedWindow.application.terminate()
+        case .restoreInitial:
+            guard let initialFrame = resizeContext.initialFrame else { return false }
+            resizeContext.lastFrame = currentFrame
+            return applyFrame(initialFrame, from: currentFrame, to: focusedWindow.windowElement)
+        case .undo:
+            guard let lastFrame = resizeContext.lastFrame else { return false }
+            resizeContext.lastFrame = currentFrame
+            return applyFrame(lastFrame, from: currentFrame, to: focusedWindow.windowElement)
+        }
+    }
+
+    private func frame(for layout: ScreenLayoutAction, within visible: CGRect) -> CGRect? {
+        switch layout {
+        case .fillVisible:
+            return visible
+        case .systemFullScreen:
+            return nil
+        case .leftHalf:
+            return CGRect(x: visible.minX, y: visible.minY, width: visible.width / 2, height: visible.height)
+        case .rightHalf:
+            return CGRect(x: visible.midX, y: visible.minY, width: visible.width / 2, height: visible.height)
+        case .leftThird:
+            return CGRect(x: visible.minX, y: visible.minY, width: visible.width / 3, height: visible.height)
+        case .centerThird:
+            return CGRect(x: visible.minX + visible.width / 3, y: visible.minY, width: visible.width / 3, height: visible.height)
+        case .rightThird:
+            return CGRect(x: visible.minX + visible.width * 2 / 3, y: visible.minY, width: visible.width / 3, height: visible.height)
+        case .topLeftQuarter:
+            return CGRect(x: visible.minX, y: visible.minY, width: visible.width / 2, height: visible.height / 2)
+        case .topRightQuarter:
+            return CGRect(x: visible.midX, y: visible.minY, width: visible.width / 2, height: visible.height / 2)
+        case .bottomLeftQuarter:
+            return CGRect(x: visible.minX, y: visible.midY, width: visible.width / 2, height: visible.height / 2)
+        case .bottomRightQuarter:
+            return CGRect(x: visible.midX, y: visible.midY, width: visible.width / 2, height: visible.height / 2)
+        }
+    }
+
+    private func frame(byScaling current: CGRect, action: RadialMenuAction, within visible: CGRect) -> CGRect {
+        let percent = RadialMenuAction.clampedScalePercent(action.scalePercent, direction: action.scaleDirection)
+        let factor: CGFloat
+        switch action.scaleDirection {
+        case .enlarge:
+            factor = 1 + CGFloat(percent / 100)
+        case .shrink:
+            factor = 1 - CGFloat(percent / 100)
+        }
+
+        let requestedSize = CGSize(width: current.width * factor, height: current.height * factor)
+
+        if action.scaleDirection == .enlarge,
+           (requestedSize.width > visible.width || requestedSize.height > visible.height) {
+            return visible
+        }
+
+        let minimumSize = action.scaleDirection == .shrink ? CGSize(width: 1, height: 1) : CGSize(width: 180, height: 120)
+        let size = CGSize(
+            width: min(max(minimumSize.width, requestedSize.width), visible.width),
+            height: min(max(minimumSize.height, requestedSize.height), visible.height)
+        )
+
+        let origin: CGPoint
+        switch action.scaleAnchor {
+        case .topLeft:
+            origin = current.origin
+        case .topRight:
+            origin = CGPoint(x: current.maxX - size.width, y: current.minY)
+        case .center:
+            origin = CGPoint(x: current.midX - size.width / 2, y: current.midY - size.height / 2)
+        }
+
+        return clamp(CGRect(origin: origin, size: size), within: visible)
     }
 
     private func frame(byResizing current: CGRect, to requestedSize: CGSize, within visible: CGRect) -> CGRect {
@@ -110,7 +221,7 @@ final class WindowActionEngine {
         return result
     }
 
-    private func applyFrame(_ targetFrame: CGRect, from currentFrame: CGRect, to window: AXUIElement) -> Bool {
+    private func applyFrame(_ targetFrame: CGRect, from currentFrame: CGRect, to window: AXUIElement, allowConstrainedResult: Bool = false) -> Bool {
         let targetFrame = targetFrame.integral
         resizeAnimationTask?.cancel()
 
@@ -119,7 +230,7 @@ final class WindowActionEngine {
         else {
             let result = WindowUtility.setFrameDetailed(targetFrame, for: window)
             log(result, phase: "direct")
-            return result.isSuccessful
+            return result.isSuccessful || (allowConstrainedResult && result.apiSucceeded)
         }
 
         let startFrame = currentFrame.integral

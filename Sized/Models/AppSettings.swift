@@ -360,15 +360,15 @@ struct AssignmentSettings: Codable, Equatable {
 
     static func defaultAction(for slot: RadialMenuSlot) -> RadialMenuAction {
         switch slot {
-        case .top: RadialMenuAction(kind: .presentation)
-        case .bottom: RadialMenuAction(kind: .compact)
-        case .left: RadialMenuAction(kind: .medium)
-        case .right: RadialMenuAction(kind: .large)
-        case .topLeft: RadialMenuAction(kind: .small)
-        case .topRight: RadialMenuAction(kind: .wide)
-        case .bottomLeft: RadialMenuAction(kind: .portrait405x720)
-        case .bottomRight: RadialMenuAction(kind: .threeTwo1200x800)
-        case .center: RadialMenuAction(kind: .browser)
+        case .top: RadialMenuAction(mode: .screenLayout, screenLayout: .fillVisible)
+        case .bottom: RadialMenuAction(mode: .windowCommand, windowCommand: .restoreInitial)
+        case .left: RadialMenuAction(mode: .screenLayout, screenLayout: .leftHalf)
+        case .right: RadialMenuAction(mode: .screenLayout, screenLayout: .rightHalf)
+        case .topLeft: RadialMenuAction(mode: .screenLayout, screenLayout: .topLeftQuarter)
+        case .topRight: RadialMenuAction(mode: .screenLayout, screenLayout: .topRightQuarter)
+        case .bottomLeft: RadialMenuAction(mode: .screenLayout, screenLayout: .bottomLeftQuarter)
+        case .bottomRight: RadialMenuAction(mode: .screenLayout, screenLayout: .bottomRightQuarter)
+        case .center: RadialMenuAction(mode: .fixedSize, fixedSizeKind: .browser)
         }
     }
 }
