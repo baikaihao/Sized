@@ -5,116 +5,176 @@
 <h1 align="center">Sized</h1>
 
 <p align="center">
-  <a href="#english">English</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#chinese">中文</a>
+  A native macOS radial window manager for resizing, arranging, scaling, and commanding the frontmost window.
+</p>
+
+<p align="center">
+  <a href="#english">English</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#中文">中文</a>
 </p>
 
 ---
 
-<h2 id="english">English</h2>
-
-Sized is a native macOS window management tool that lets you instantly resize the frontmost window to preset dimensions. Trigger a beautiful radial menu with a keyboard shortcut or mouse middle-click, flick in any of 8 directions or the center slot, and release — the window snaps to the target size.
-
 <p align="center">
-  <img src="other/ss1.png" alt="Sized Screenshot 1" width="70%">
-</p>
-<p align="center">
-  <img src="other/ss2.png" alt="Sized Screenshot 2" width="70%">
+  <img src="other/show.gif" alt="Sized workspace preview" width="72%">
 </p>
 
-- **Native macOS app** — Built with SwiftUI + AppKit, deeply integrated with the system
-- **Radial menu interaction** — 8-direction + center wheel, flick to select, release to confirm
-- **50 selectable preset sizes** — Ratio-based presets across 21:9, 16:10, 16:9, 9:16, 4:3, 3:2, and 1:1, from compact sizes to ultrawide 3440×1440
-- **App-specific rules** — Give Safari, Xcode, terminal apps, or any bundle ID its own wheel assignment
-- **Liquid Glass ready** — Full support for macOS 26 Tahoe's Liquid Glass design language with graceful fallback on macOS 14+
-- **Keyboard & mouse triggers** — Custom modifier key trigger, middle-click trigger, or both
-- **Live preview window** — See the target area before confirming
-- **Haptic feedback** — Native haptics on direction selection
-- **Highly customizable** — Wheel size, thickness, corner radius, accent color (system / custom), animations, and full assignment mapping
-- **Import, export, and utility actions** — Back up settings as JSON, undo the last resize, or restore the initial window frame
-- **Launch at login** — Optional auto-start via SMAppService
+<p align="center">
+  <img src="other/closewindow.gif" alt="Sized close-window warning preview" width="72%">
+</p>
+
+---
+
+## English
+
+Sized is a native macOS window management tool built around a radial menu. Trigger the wheel, move toward a slot, preview the target area, and release to apply the action to the current frontmost window.
+
+It started as a fast preset-size resizer. It now supports full workspace layouts, relative scaling, destructive-action warnings, app-specific rules, and fully configurable wheel assignments.
+
+### Highlights
+
+- **Radial workflow**: 8 directional slots plus a center slot, designed for fast mouse or trackpad gestures.
+- **Live target preview**: See the exact target frame before confirming a resize or layout action.
+- **Danger preview**: Closing a window or quitting its app shows a red overlay on the focused window before confirmation.
+- **Fixed sizes**: Choose pixel-level presets such as `1280 x 720`, `1920 x 1080`, or custom width and height.
+- **Screen layouts**: Fill the visible workspace, enter system full screen, move to left/right half, left/center/right third, or any screen quarter.
+- **Relative scaling**: Enlarge by `5%` to `200%`, shrink by `5%` to `95%`, and anchor scaling from top-left, top-right, or center.
+- **Window commands**: Minimize, close window, quit application, restore initial frame, or undo the last resize.
+- **App-specific rules**: Use different slot assignments for different apps by bundle identifier.
+- **Custom appearance**: Tune wheel size, thickness, corner radius, center badge, colors, animation, preview style, and haptics.
+- **Import and export**: Back up or share settings as JSON.
 
 ### Requirements
 
-- macOS 14.0 (Sonoma) or later
-- Accessibility permission (required for window resizing)
+- macOS 14.0 Sonoma or later
+- Accessibility permission, required for reading and controlling windows
 
 ### Default Trigger
 
-Use **middle-click** to open the wheel, or hold the default keyboard trigger **Control-E (⌃E)**. Move your mouse toward a direction and release to resize.
+Use **middle-click** to open the wheel, or hold the default keyboard trigger **Control-E (⌃E)**. Move the pointer toward a slot and release to confirm. You can change the trigger behavior in Settings.
 
-### Default Radial Menu Mapping
+### Default Wheel Mapping
 
-| Direction | Action |
-|-----------|--------|
-| Center | Browser 1280×720 |
-| ↑ Top | Presentation 1920×1080 |
-| ↓ Bottom | Compact 800×600 |
-| ← Left | Medium 1024×768 |
-| → Right | Large 1280×800 |
-| ↖ Top-Left | Small 640×480 |
-| ↗ Top-Right | Wide 1440×900 |
-| ↙ Bottom-Left | Portrait 405×720 |
-| ↘ Bottom-Right | 3:2 1200×800 |
+| Slot | Default action |
+| --- | --- |
+| Center | Fixed size `1280 x 720` |
+| Top | Fill visible workspace |
+| Bottom | Restore initial frame |
+| Left | Left half |
+| Right | Right half |
+| Top-left | Top-left quarter |
+| Top-right | Top-right quarter |
+| Bottom-left | Bottom-left quarter |
+| Bottom-right | Bottom-right quarter |
 
-### App Rules
+### Assignment Modes
 
-Create app-specific rules from the settings window to use different wheel assignments for different apps. Rules match by bundle identifier, and Sized falls back to the default assignment when no rule matches.
+Each slot can be assigned one of five action modes:
+
+| Mode | What it does |
+| --- | --- |
+| Fixed Size | Resize the focused window to a preset or custom pixel size. |
+| Screen Layout | Move and resize the window relative to the current screen's visible workspace. |
+| Relative Scale | Enlarge or shrink the current window by a percentage. |
+| Window Command | Minimize, close, quit app, restore initial frame, or undo last resize. |
+| No Action | Leave the slot intentionally empty. |
+
+### Notes
+
+- The visible workspace excludes the menu bar and Dock.
+- System full screen uses the target app's accessibility full-screen or zoom button. If the app does not support it, the action fails instead of falling back to a normal resize.
+- Some apps enforce their own minimum and maximum window sizes. Sized asks for the target frame, but the app may constrain the final result.
+- Destructive actions do not show a second confirmation dialog. The red overlay is the warning.
+
+### Build From Source
+
+Open `Sized.xcodeproj` in Xcode and build the `Sized` scheme, or run:
+
+```sh
+xcodebuild -project Sized.xcodeproj -scheme Sized -configuration Debug build
+```
+
+### Privacy
+
+Sized works locally through macOS accessibility APIs. Settings are stored locally in UserDefaults. No window titles, app data, or configuration data is uploaded by Sized.
 
 ### Acknowledgments
 
-Inspired by [Loop](https://github.com/MrKai77/Loop). 
+Inspired by [Loop](https://github.com/MrKai77/Loop).
 
 ---
 
-<h2 id="chinese">中文</h2>
+## 中文
 
-Sized 是一款 macOS 原生窗口管理工具，帮助你一键将当前窗口调整到预设尺寸。按下快捷键或鼠标中键呼出精美的径向轮盘，向 8 个方向或中心槽位滑动鼠标，松手即可完成调整。
+Sized 是一款 macOS 原生窗口管理工具，核心交互是径向轮盘。呼出轮盘，鼠标滑向某个槽位，先看到目标区域预览，松手后对当前焦点窗口执行对应动作。
 
-<p align="center">
-  <img src="other/ss1.png" alt="Sized 截图 1" width="70%">
-</p>
-<p align="center">
-  <img src="other/ss2.png" alt="Sized 截图 2" width="70%">
-</p>
+它最初是一个快速尺寸调整工具。现在可以做工作区布局、相对缩放、危险动作警示、按应用分配规则，以及完整的槽位自定义。
 
-- **macOS 原生应用** — 基于 SwiftUI + AppKit 构建，与系统深度集成
-- **轮盘交互** — 8 方向 + 中心共 9 个区域，滑动选择，松手确认
-- **50 种可选预设尺寸** — 覆盖 21:9、16:10、16:9、9:16、4:3、3:2、1:1 等比例，从小尺寸到 3440×1440 超宽屏
-- **应用规则** — 可为 Safari、Xcode、终端类 App 或任意 Bundle ID 配置独立轮盘分配
-- **Liquid Glass 适配** — 完整适配 macOS 26 Tahoe 的 Liquid Glass 设计语言，macOS 14+ 优雅降级
-- **键盘与鼠标触发** — 支持自定义修饰键触发、鼠标中键触发，或同时使用
-- **实时预览窗口** — 确认前预览目标区域
-- **触觉反馈** — 方向选择时原生触觉反馈
-- **高度可定制** — 轮盘大小、厚度、圆角、强调色（系统 / 自定义）、动画效果、完整方向分配映射
-- **导入导出与辅助操作** — 支持 JSON 备份/恢复配置、撤销上一次尺寸、恢复初始窗口尺寸
-- **开机自启** — 可选通过 SMAppService 登录时自动启动
+### 亮点
+
+- **轮盘操作**：8 个方向槽位加中心槽位，适合快速鼠标或触控板手势。
+- **实时目标预览**：调整尺寸或移动布局前，先看到目标窗口区域。
+- **危险动作预览**：关闭窗口或退出应用前，会在当前焦点窗口上显示红色遮罩。
+- **固定尺寸**：选择像素级预设，例如 `1280 x 720`、`1920 x 1080`，也可以输入自定义宽高。
+- **屏幕布局**：铺满可见工作区、进入系统全屏、左/右半屏、左/中/右三分之一、四角四分之一。
+- **相对缩放**：放大 `5%` 到 `200%`，缩小 `5%` 到 `95%`，支持左上、右上、中心三种锚点。
+- **窗口命令**：最小化、关闭窗口、退出应用、恢复初始尺寸、撤销上一次尺寸。
+- **应用规则**：按 Bundle Identifier 为不同 App 配置不同的轮盘槽位。
+- **外观可定制**：轮盘大小、厚度、圆角、中心区域、颜色、动画、预览窗口和触觉反馈都可以调。
+- **导入导出**：用 JSON 备份或迁移配置。
 
 ### 系统要求
 
-- macOS 14.0 (Sonoma) 或更高版本
-- 辅助功能权限（窗口调整必需）
+- macOS 14.0 Sonoma 或更高版本
+- 辅助功能权限，用于读取和控制窗口
 
 ### 默认触发方式
 
-默认可用 **鼠标中键** 呼出轮盘，也可以按住默认键盘触发键 **Control-E (⌃E)**。鼠标向对应方向滑动，松手即可调整窗口大小。
+默认可以用 **鼠标中键** 呼出轮盘，也可以按住默认键盘触发键 **Control-E (⌃E)**。鼠标移动到目标槽位后松手确认。触发方式可以在设置里修改。
 
-### 默认轮盘方向映射
+### 默认轮盘分配
 
-| 方向 | 操作 |
-|------|------|
-| 中心 | 浏览器 1280×720 |
-| ↑ 上 | 演示 1920×1080 |
-| ↓ 下 | 紧凑 800×600 |
-| ← 左 | 中等 1024×768 |
-| → 右 | 大窗口 1280×800 |
-| ↖ 左上 | 小窗口 640×480 |
-| ↗ 右上 | 宽屏 1440×900 |
-| ↙ 左下 | 竖屏 405×720 |
-| ↘ 右下 | 3:2 1200×800 |
+| 槽位 | 默认动作 |
+| --- | --- |
+| 中心 | 固定尺寸 `1280 x 720` |
+| 上 | 铺满可见工作区 |
+| 下 | 恢复初始尺寸 |
+| 左 | 左半屏 |
+| 右 | 右半屏 |
+| 左上 | 左上四分之一 |
+| 右上 | 右上四分之一 |
+| 左下 | 左下四分之一 |
+| 右下 | 右下四分之一 |
 
-### 应用规则
+### 槽位模式
 
-可以在设置窗口中创建应用规则，为不同 App 使用不同的轮盘分配。规则按 Bundle Identifier 匹配；没有命中规则时，Sized 会使用默认尺寸分配。
+每个槽位可以选择五种模式：
+
+| 模式 | 作用 |
+| --- | --- |
+| 固定尺寸 | 将当前焦点窗口调整到预设或自定义像素尺寸。 |
+| 屏幕布局 | 基于当前屏幕的可见工作区移动并调整窗口。 |
+| 相对缩放 | 按百分比放大或缩小当前窗口。 |
+| 窗口命令 | 最小化、关闭、退出应用、恢复初始尺寸、撤销上一次尺寸。 |
+| 无操作 | 让该槽位保持空置。 |
+
+### 说明
+
+- 可见工作区会避开菜单栏和 Dock。
+- 系统全屏会调用目标 App 的辅助功能全屏按钮或绿色按钮。如果目标 App 不支持，该动作会失败，不会自动退化成普通铺满。
+- 部分 App 会限制窗口最小或最大尺寸。Sized 会请求目标尺寸，但最终结果可能被 App 自身约束。
+- 危险动作不会再弹出二次确认框，红色遮罩就是确认前的警示。
+
+### 从源码构建
+
+用 Xcode 打开 `Sized.xcodeproj` 并构建 `Sized` scheme，或运行：
+
+```sh
+xcodebuild -project Sized.xcodeproj -scheme Sized -configuration Debug build
+```
+
+### 隐私
+
+Sized 通过 macOS 辅助功能 API 在本机工作。设置保存在本地 UserDefaults 中。Sized 不会上传窗口标题、应用数据或配置数据。
 
 ### 致谢
 
