@@ -185,13 +185,13 @@ struct TriggerSettings: Codable, Equatable {
 
     static let `default` = TriggerSettings(
         triggerKeyDisplayName: "⌃E",
-        useOptionAsTrigger: false,
+        useOptionAsTrigger: true,
         optionSide: .right,
         triggerDelayMilliseconds: 0,
         doubleTapTrigger: false,
         middleClickTrigger: true,
         sideMouseButtonTrigger: false,
-        sideMouseButtonNumber: 3,
+        sideMouseButtonNumber: 4,
         timeoutSeconds: 5
     )
 }
@@ -258,16 +258,16 @@ struct BehaviorSettings: Codable, Equatable {
     static let `default` = BehaviorSettings(
         confirmationMode: .release,
         resizeAnimation: true,
-        resizeAnimationDuration: 0.16,
-        resizeAnchor: .currentCenter,
+        resizeAnimationDuration: 0.11,
+        resizeAnchor: .topLeft,
         ignoreFullScreenWindows: true,
         showPreview: true,
-        previewPadding: 8,
-        previewCornerRadius: 12,
+        previewPadding: 0,
+        previewCornerRadius: 22,
         previewBorderWidth: 2,
-        previewBorderColorHex: "#0A84FF",
+        previewBorderColorHex: "#3A79FF",
         previewBackgroundColorHex: "#0A84FF",
-        previewAnimationSpeed: 0.2,
+        previewAnimationSpeed: 0.25,
         hapticFeedback: true,
         escapeCancelsRadial: true,
         rightClickCancelsRadial: true,
@@ -342,9 +342,9 @@ struct GeneralSettings: Codable, Equatable {
     var hideDockIcon: Bool
 
     static let `default` = GeneralSettings(
-        launchAtLogin: false,
+        launchAtLogin: true,
         showMenuBarIcon: true,
-        hideDockIcon: false
+        hideDockIcon: true
     )
 }
 
@@ -360,15 +360,78 @@ struct AssignmentSettings: Codable, Equatable {
 
     static func defaultAction(for slot: RadialMenuSlot) -> RadialMenuAction {
         switch slot {
-        case .top: RadialMenuAction(mode: .screenLayout, screenLayout: .fillVisible)
-        case .bottom: RadialMenuAction(mode: .windowCommand, windowCommand: .restoreInitial)
-        case .left: RadialMenuAction(mode: .screenLayout, screenLayout: .leftHalf)
-        case .right: RadialMenuAction(mode: .screenLayout, screenLayout: .rightHalf)
-        case .topLeft: RadialMenuAction(mode: .screenLayout, screenLayout: .topLeftQuarter)
-        case .topRight: RadialMenuAction(mode: .screenLayout, screenLayout: .topRightQuarter)
-        case .bottomLeft: RadialMenuAction(mode: .screenLayout, screenLayout: .bottomLeftQuarter)
-        case .bottomRight: RadialMenuAction(mode: .screenLayout, screenLayout: .bottomRightQuarter)
-        case .center: RadialMenuAction(mode: .fixedSize, fixedSizeKind: .browser)
+        case .top:
+            RadialMenuAction(
+                id: UUID(uuidString: "77C9FF33-80A3-4207-93D0-8799BC5ADB8B")!,
+                mode: .screenLayout,
+                fixedSizeKind: .presentation,
+                screenLayout: .fillVisible
+            )
+        case .bottom:
+            RadialMenuAction(
+                id: UUID(uuidString: "8716B1E6-F093-4F28-9FAF-279922CBFB48")!,
+                mode: .windowCommand,
+                fixedSizeKind: .compact,
+                windowCommand: .minimize
+            )
+        case .left:
+            RadialMenuAction(
+                id: UUID(uuidString: "5B656B77-D9CE-450C-A576-B0D251F36AAE")!,
+                mode: .screenLayout,
+                fixedSizeKind: .custom,
+                customSize: CustomWindowSize(width: 640, height: 360),
+                screenLayout: .leftThird,
+                scaleDirection: .shrink,
+                scalePercent: 40,
+                scaleAnchor: .topLeft
+            )
+        case .right:
+            RadialMenuAction(
+                id: UUID(uuidString: "51C060E3-3ED6-4930-BCA1-9F216304C571")!,
+                mode: .screenLayout,
+                fixedSizeKind: .large,
+                screenLayout: .rightHalf,
+                scaleAnchor: .topRight
+            )
+        case .topLeft:
+            RadialMenuAction(
+                id: UUID(uuidString: "28952C3E-986A-4781-B73D-B4AA764C1FDA")!,
+                mode: .fixedSize,
+                fixedSizeKind: .small,
+                windowCommand: .undo
+            )
+        case .topRight:
+            RadialMenuAction(
+                id: UUID(uuidString: "95BF0812-19A7-4F70-A1A7-AA7CC212F8C1")!,
+                mode: .relativeScale,
+                fixedSizeKind: .threeTwo900x600,
+                scaleAnchor: .topRight
+            )
+        case .bottomLeft:
+            RadialMenuAction(
+                id: UUID(uuidString: "7896F01E-BA0B-4955-BB66-0F05B28966B1")!,
+                mode: .windowCommand,
+                fixedSizeKind: .custom,
+                customSize: CustomWindowSize(width: 920, height: 1080),
+                scaleAnchor: .topLeft,
+                windowCommand: .closeWindow
+            )
+        case .bottomRight:
+            RadialMenuAction(
+                id: UUID(uuidString: "0BCCD110-F102-4B7D-84B8-22E74521762E")!,
+                mode: .relativeScale,
+                fixedSizeKind: .custom,
+                customSize: CustomWindowSize(width: 1024, height: 640),
+                scaleDirection: .shrink,
+                scaleAnchor: .topRight,
+                windowCommand: .closeWindow
+            )
+        case .center:
+            RadialMenuAction(
+                id: UUID(uuidString: "12BCE32C-8002-4DDA-A51E-82229E2003BA")!,
+                mode: .fixedSize,
+                fixedSizeKind: .browser
+            )
         }
     }
 }
@@ -399,7 +462,17 @@ struct AppRuleSettings: Codable, Equatable {
     var isEnabled: Bool
     var rules: [AppRule]
 
-    static let `default` = AppRuleSettings(isEnabled: true, rules: [])
+    static let `default` = AppRuleSettings(
+        isEnabled: false,
+        rules: [
+            AppRule(
+                id: UUID(uuidString: "6B18ACD0-543D-4EA7-814A-9D20006E7D18")!,
+                appName: "Ghostty",
+                bundleIdentifier: "com.mitchellh.ghostty",
+                assignments: .ghosttyDefault
+            )
+        ]
+    )
 
     func matchingRule(for bundleIdentifier: String?) -> AppRule? {
         guard isEnabled, let bundleIdentifier, !bundleIdentifier.isEmpty else { return nil }
@@ -411,6 +484,61 @@ struct AppRuleSettings: Codable, Equatable {
     func assignments(for bundleIdentifier: String?, fallback: AssignmentSettings) -> AssignmentSettings {
         matchingRule(for: bundleIdentifier)?.assignments ?? fallback
     }
+}
+
+private extension AssignmentSettings {
+    static let ghosttyDefault = AssignmentSettings(
+        actions: [
+            .topLeft: RadialMenuAction(
+                id: UUID(uuidString: "28952C3E-986A-4781-B73D-B4AA764C1FDA")!,
+                mode: .fixedSize,
+                fixedSizeKind: .small
+            ),
+            .top: RadialMenuAction(
+                id: UUID(uuidString: "77C9FF33-80A3-4207-93D0-8799BC5ADB8B")!,
+                mode: .fixedSize,
+                fixedSizeKind: .presentation
+            ),
+            .topRight: RadialMenuAction(
+                id: UUID(uuidString: "95BF0812-19A7-4F70-A1A7-AA7CC212F8C1")!,
+                mode: .fixedSize,
+                fixedSizeKind: .threeTwo600x400
+            ),
+            .left: RadialMenuAction(
+                id: UUID(uuidString: "5B656B77-D9CE-450C-A576-B0D251F36AAE")!,
+                mode: .fixedSize,
+                fixedSizeKind: .custom,
+                customSize: CustomWindowSize(width: 640, height: 360)
+            ),
+            .center: RadialMenuAction(
+                id: UUID(uuidString: "12BCE32C-8002-4DDA-A51E-82229E2003BA")!,
+                mode: .fixedSize,
+                fixedSizeKind: .browser
+            ),
+            .right: RadialMenuAction(
+                id: UUID(uuidString: "51C060E3-3ED6-4930-BCA1-9F216304C571")!,
+                mode: .fixedSize,
+                fixedSizeKind: .ultrawide840x360
+            ),
+            .bottomLeft: RadialMenuAction(
+                id: UUID(uuidString: "7896F01E-BA0B-4955-BB66-0F05B28966B1")!,
+                mode: .fixedSize,
+                fixedSizeKind: .ultrawide1280x540,
+                customSize: CustomWindowSize(width: 920, height: 1080)
+            ),
+            .bottom: RadialMenuAction(
+                id: UUID(uuidString: "8716B1E6-F093-4F28-9FAF-279922CBFB48")!,
+                mode: .fixedSize,
+                fixedSizeKind: .compact
+            ),
+            .bottomRight: RadialMenuAction(
+                id: UUID(uuidString: "0BCCD110-F102-4B7D-84B8-22E74521762E")!,
+                mode: .fixedSize,
+                fixedSizeKind: .custom,
+                customSize: CustomWindowSize(width: 1024, height: 640)
+            )
+        ]
+    )
 }
 
 struct AppSettingsSnapshot: Codable, Equatable {

@@ -109,9 +109,30 @@ final class SettingsStore: ObservableObject {
         persist()
     }
 
+    func exportAssignmentsJSON() throws -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(assignments)
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    func importAssignmentsJSON(_ text: String) throws {
+        let data = Data(text.utf8)
+        let decoded = try decodeAssignments(from: data)
+        assignments = decoded
+    }
+
     private func persist() {
         guard !isLoading else { return }
         guard let data = try? JSONEncoder().encode(snapshot) else { return }
         defaults.set(data, forKey: settingsKey)
+    }
+
+    private func decodeAssignments(from data: Data) throws -> AssignmentSettings {
+        let decoder = JSONDecoder()
+        if let assignments = try? decoder.decode(AssignmentSettings.self, from: data) {
+            return assignments
+        }
+        return try decoder.decode(AppSettingsSnapshot.self, from: data).assignments
     }
 }

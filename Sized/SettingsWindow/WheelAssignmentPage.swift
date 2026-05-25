@@ -27,7 +27,7 @@ struct WheelAssignmentPage: View {
                     Spacer()
 
                     Button {
-                        exportText = (try? settings.exportJSON()) ?? ""
+                        exportText = (try? settings.exportAssignmentsJSON()) ?? ""
                         showingExport = true
                     } label: {
                         Label("导出", systemImage: "square.and.arrow.up")
@@ -44,17 +44,17 @@ struct WheelAssignmentPage: View {
             }
         }
         .sheet(isPresented: $showingExport) {
-            JSONSheet(title: "导出配置", text: $exportText, error: nil, primaryTitle: "完成") {
+            JSONSheet(title: "导出尺寸分配", text: $exportText, error: nil, primaryTitle: "完成") {
                 showingExport = false
             }
         }
         .sheet(isPresented: $showingImport) {
-            JSONSheet(title: "导入配置", text: $importText, error: importError, primaryTitle: "导入") {
+            JSONSheet(title: "导入尺寸分配", text: $importText, error: importError, primaryTitle: "导入") {
                 do {
-                    try settings.importJSON(importText)
+                    try settings.importAssignmentsJSON(importText)
                     showingImport = false
                 } catch {
-                    importError = "配置文件格式无效：%@".localizedFormat(error.localizedDescription)
+                    importError = "尺寸分配格式无效：%@".localizedFormat(error.localizedDescription)
                 }
             }
         }
