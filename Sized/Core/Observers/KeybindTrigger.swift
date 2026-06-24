@@ -18,6 +18,8 @@ final class KeybindTrigger {
     private var currentTriggerKeycode: Int64 = 0
     private var pendingWorkItem: DispatchWorkItem?
     private var lastTriggerDate: Date?
+    private var cachedKeybindingDisplayName = ""
+    private var cachedKeybinding = ParsedKeybinding(modifiers: [], keyCode: 0, isValid: false)
     private var settings: SettingsStore { .shared }
     
     private struct ParsedKeybinding {
@@ -63,7 +65,7 @@ final class KeybindTrigger {
             }
 
             if !settings.trigger.useOptionAsTrigger {
-                let keybinding = parseKeybinding(settings.trigger.triggerKeyDisplayName)
+                let keybinding = currentKeybinding()
                 let eventModifiers = event.flags.intersection([.maskCommand, .maskShift, .maskControl, .maskAlternate])
 
                 if keybinding.isValid &&
@@ -139,7 +141,7 @@ final class KeybindTrigger {
                 delegate?.triggerDidEnd(confirm: true)
             }
         } else if isTriggerDown {
-            let keybinding = parseKeybinding(settings.trigger.triggerKeyDisplayName)
+            let keybinding = currentKeybinding()
             guard keybinding.isValid else { return }
             let triggerModifiers = keybinding.modifiers
             let currentModifiers = flags.intersection([.maskCommand, .maskShift, .maskControl, .maskAlternate])
@@ -151,6 +153,15 @@ final class KeybindTrigger {
                 delegate?.triggerDidEnd(confirm: true)
             }
         }
+    }
+
+    private func currentKeybinding() -> ParsedKeybinding {
+        let displayName = settings.trigger.triggerKeyDisplayName
+        if displayName != cachedKeybindingDisplayName {
+            cachedKeybindingDisplayName = displayName
+            cachedKeybinding = parseKeybinding(displayName)
+        }
+        return cachedKeybinding
     }
     
     private func parseKeybinding(_ displayName: String) -> ParsedKeybinding {

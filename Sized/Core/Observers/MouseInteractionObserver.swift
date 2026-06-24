@@ -63,12 +63,12 @@ final class MouseInteractionObserver {
             options: .defaultTap,
             eventsOfInterest: CGEventMask(mask),
             callback: { _, type, event, refcon in
-                guard let refcon else { return Unmanaged.passRetained(event) }
+                guard let refcon else { return Unmanaged.passUnretained(event) }
                 let observer = Unmanaged<MouseInteractionObserver>.fromOpaque(refcon).takeUnretainedValue()
                 DispatchQueue.main.async {
                     observer.handleMouseMoved(location: NSEvent.mouseLocation)
                 }
-                return Unmanaged.passRetained(event)
+                return Unmanaged.passUnretained(event)
             },
             userInfo: refcon
         ) else { return }

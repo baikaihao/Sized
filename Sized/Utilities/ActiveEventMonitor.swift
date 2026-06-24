@@ -28,11 +28,11 @@ final class ActiveEventMonitor {
             options: .defaultTap,
             eventsOfInterest: mask,
             callback: { _, type, event, refcon in
-                guard let refcon else { return Unmanaged.passRetained(event) }
+                guard let refcon else { return Unmanaged.passUnretained(event) }
                 let monitor = Unmanaged<ActiveEventMonitor>.fromOpaque(refcon).takeUnretainedValue()
                 switch monitor.handler(type, event) {
                 case .forward:
-                    return Unmanaged.passRetained(event)
+                    return Unmanaged.passUnretained(event)
                 case .ignore:
                     return nil
                 }
