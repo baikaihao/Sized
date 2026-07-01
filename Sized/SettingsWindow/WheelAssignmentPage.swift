@@ -252,7 +252,7 @@ private struct AssignmentDetailPanel: View {
                     }
                 }
 
-                Label("选择该槽位后，Sized 会把当前焦点窗口改为选中的宽高。", systemImage: "info.circle")
+                Label("选择该槽位后，Sized 会把目标窗口改为选中的宽高。", systemImage: "info.circle")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -317,11 +317,11 @@ private struct AssignmentDetailPanel: View {
             }
 
             if action.windowCommand.isDestructive {
-                Label("选择该槽位时，当前焦点窗口会显示红色遮罩作为警示。", systemImage: "exclamationmark.triangle")
+                Label("选择该槽位时，目标窗口会显示红色遮罩作为警示。", systemImage: "exclamationmark.triangle")
                     .font(.footnote)
                     .foregroundStyle(.red)
             } else {
-                Label("命令会作用于当前焦点窗口或其所属应用。", systemImage: "info.circle")
+                Label("命令会作用于目标窗口或其所属应用。", systemImage: "info.circle")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

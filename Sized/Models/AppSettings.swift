@@ -59,6 +59,20 @@ enum ResizeAnchor: String, CaseIterable, Codable, Identifiable {
     }
 }
 
+enum WindowTargetMode: String, CaseIterable, Codable, Identifiable {
+    case focused
+    case mouse
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .focused: "当前焦点窗口".localized
+        case .mouse: "鼠标指向窗口".localized
+        }
+    }
+}
+
 struct WheelStyleSettings: Codable, Equatable {
     var isVisible: Bool
     var size: Double
@@ -239,6 +253,7 @@ extension TriggerSettings {
 
 struct BehaviorSettings: Codable, Equatable {
     var confirmationMode: ConfirmationMode
+    var windowTargetMode: WindowTargetMode
     var resizeAnimation: Bool
     var resizeAnimationDuration: Double
     var resizeAnchor: ResizeAnchor
@@ -257,6 +272,7 @@ struct BehaviorSettings: Codable, Equatable {
 
     static let `default` = BehaviorSettings(
         confirmationMode: .release,
+        windowTargetMode: .focused,
         resizeAnimation: true,
         resizeAnimationDuration: 0.11,
         resizeAnchor: .topLeft,
@@ -278,6 +294,7 @@ struct BehaviorSettings: Codable, Equatable {
 extension BehaviorSettings {
     private enum CodingKeys: String, CodingKey {
         case confirmationMode
+        case windowTargetMode
         case resizeAnimation
         case resizeAnimationDuration
         case resizeAnchor
@@ -298,6 +315,7 @@ extension BehaviorSettings {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         confirmationMode = try container.decodeIfPresent(ConfirmationMode.self, forKey: .confirmationMode) ?? Self.default.confirmationMode
+        windowTargetMode = try container.decodeIfPresent(WindowTargetMode.self, forKey: .windowTargetMode) ?? Self.default.windowTargetMode
         resizeAnimation = try container.decodeIfPresent(Bool.self, forKey: .resizeAnimation) ?? Self.default.resizeAnimation
         resizeAnimationDuration = try container.decodeIfPresent(Double.self, forKey: .resizeAnimationDuration) ?? Self.default.resizeAnimationDuration
         resizeAnchor = try container.decodeIfPresent(ResizeAnchor.self, forKey: .resizeAnchor) ?? Self.default.resizeAnchor
@@ -318,6 +336,7 @@ extension BehaviorSettings {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(confirmationMode, forKey: .confirmationMode)
+        try container.encode(windowTargetMode, forKey: .windowTargetMode)
         try container.encode(resizeAnimation, forKey: .resizeAnimation)
         try container.encode(resizeAnimationDuration, forKey: .resizeAnimationDuration)
         try container.encode(resizeAnchor, forKey: .resizeAnchor)

@@ -99,6 +99,7 @@ struct GeneralSettingsPage: View {
 
             SettingsSection(title: "行为设置", systemImage: "cursorarrow.motionlines") {
                 PickerRow(title: "确认方式", selection: $settings.behavior.confirmationMode)
+                PickerRow(title: "目标窗口", selection: $settings.behavior.windowTargetMode)
                 Toggle("启用窗口动画", isOn: $settings.behavior.resizeAnimation)
                 SliderRowDecimal(title: "窗口动画时长", value: $settings.behavior.resizeAnimationDuration, range: 0.05...0.5, step: 0.01, suffix: "秒")
                     .disabled(!settings.behavior.resizeAnimation)

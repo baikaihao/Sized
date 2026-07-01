@@ -1,1 +1,1 @@
-"NSAccessibilityUsageDescription" = "Sized needs Accessibility permission to read and resize the current focused window.";
+"NSAccessibilityUsageDescription" = "Sized needs Accessibility permission to read and resize the selected target window.";

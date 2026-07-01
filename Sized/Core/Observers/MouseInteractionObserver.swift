@@ -16,6 +16,8 @@ final class MouseInteractionObserver {
     private var isActive = false
     private var selectedSlot: RadialMenuSlot?
     private var directionalActionDistance: CGFloat = 20
+    private var pendingLocation: CGPoint?
+    private var isMoveUpdateScheduled = false
 
     private let noActionDistance: CGFloat = 3
 
@@ -47,6 +49,8 @@ final class MouseInteractionObserver {
         clickMonitor?.stop()
         clickMonitor = nil
         selectedSlot = nil
+        pendingLocation = nil
+        isMoveUpdateScheduled = false
     }
 
     private func startMoveMonitor() {
@@ -65,9 +69,7 @@ final class MouseInteractionObserver {
             callback: { _, type, event, refcon in
                 guard let refcon else { return Unmanaged.passUnretained(event) }
                 let observer = Unmanaged<MouseInteractionObserver>.fromOpaque(refcon).takeUnretainedValue()
-                DispatchQueue.main.async {
-                    observer.handleMouseMoved(location: NSEvent.mouseLocation)
-                }
+                observer.scheduleMouseMoved()
                 return Unmanaged.passUnretained(event)
             },
             userInfo: refcon
@@ -90,6 +92,21 @@ final class MouseInteractionObserver {
         }
         moveEventTap = nil
         moveRunLoopSource = nil
+    }
+
+    private func scheduleMouseMoved() {
+        pendingLocation = NSEvent.mouseLocation
+        guard !isMoveUpdateScheduled else { return }
+
+        isMoveUpdateScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            let location = self.pendingLocation
+            self.pendingLocation = nil
+            self.isMoveUpdateScheduled = false
+            guard let location else { return }
+            self.handleMouseMoved(location: location)
+        }
     }
 
     private func handleMouseMoved(location: CGPoint) {

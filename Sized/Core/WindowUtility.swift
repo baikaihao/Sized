@@ -93,6 +93,33 @@ enum WindowUtility {
         return FocusedWindow(application: app, appElement: appElement, windowElement: windowElement, frame: frame)
     }
 
+    static func window(at appKitPoint: CGPoint) -> FocusedWindow? {
+        let screenPoint = appKitPointToAX(appKitPoint)
+        guard let windowInfo = topWindowInfo(containing: screenPoint),
+              let pid = windowInfo[kCGWindowOwnerPID as String] as? pid_t,
+              pid != ProcessInfo.processInfo.processIdentifier,
+              let application = NSRunningApplication(processIdentifier: pid)
+        else { return nil }
+
+        let appElement = AXUIElementCreateApplication(pid)
+        guard let windowElement = window(in: appElement, containing: screenPoint) ?? firstWindow(in: appElement),
+              let frame = frame(of: windowElement)
+        else {
+            return focusedWindow()
+        }
+
+        return FocusedWindow(application: application, appElement: appElement, windowElement: windowElement, frame: frame)
+    }
+
+    static func targetWindow(mode: WindowTargetMode, point: CGPoint) -> FocusedWindow? {
+        switch mode {
+        case .focused:
+            return focusedWindow()
+        case .mouse:
+            return window(at: point) ?? focusedWindow()
+        }
+    }
+
     static func firstWindow(in appElement: AXUIElement) -> AXUIElement? {
         var windowsValue: CFTypeRef?
         guard AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windowsValue) == .success else { return nil }
@@ -102,6 +129,19 @@ enum WindowUtility {
             framedWindows.first { isWindowElement($0) } ??
             framedWindows.first ??
             windows.first
+    }
+
+    static func window(in appElement: AXUIElement, containing point: CGPoint) -> AXUIElement? {
+        var windowsValue: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windowsValue) == .success else { return nil }
+        guard let windows = windowsValue as? [AXUIElement] else { return nil }
+
+        let candidates = windows.compactMap { window -> (window: AXUIElement, frame: CGRect)? in
+            guard isUsableWindowElement(window), let frame = frame(of: window) else { return nil }
+            return (window, frame)
+        }
+
+        return candidates.first { $0.frame.contains(point) }?.window
     }
 
     static func frame(of window: AXUIElement) -> CGRect? {
@@ -214,9 +254,35 @@ enum WindowUtility {
         return CGRect(x: rect.minX, y: globalMaxY - rect.maxY, width: rect.width, height: rect.height)
     }
 
+    static func appKitPointToAX(_ point: CGPoint) -> CGPoint {
+        let globalMaxY = NSScreen.screens.map(\.frame.maxY).max() ?? point.y
+        return CGPoint(x: point.x, y: globalMaxY - point.y)
+    }
+
     static func screen(forAXFrame frame: CGRect) -> NSScreen {
         let appKitFrame = axRectToAppKit(frame)
         return ScreenUtility.screen(containing: appKitFrame)
+    }
+
+    private static func topWindowInfo(containing point: CGPoint) -> [String: Any]? {
+        guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
+            return nil
+        }
+
+        return list.first { info in
+            guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0 else { return false }
+            guard let bounds = info[kCGWindowBounds as String] as? [String: Any],
+                  let x = bounds["X"] as? CGFloat,
+                  let y = bounds["Y"] as? CGFloat,
+                  let width = bounds["Width"] as? CGFloat,
+                  let height = bounds["Height"] as? CGFloat,
+                  width > 1,
+                  height > 1
+            else { return false }
+
+            let frame = CGRect(x: x, y: y, width: width, height: height)
+            return frame.contains(point)
+        }
     }
 
     private static func pointAttribute(_ attribute: String, window: AXUIElement) -> CGPoint? {

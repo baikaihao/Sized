@@ -23,50 +23,50 @@ final class WindowActionEngine {
 
     private init() {}
 
-    func hasFocusedWindow() -> Bool {
-        WindowUtility.focusedWindow() != nil
+    func hasTargetWindow(_ targetWindow: FocusedWindow?) -> Bool {
+        targetWindow != nil
     }
 
-    func targetFrame(for action: RadialMenuAction) -> CGRect? {
-        guard let focusedWindow = WindowUtility.focusedWindow() else { return nil }
-        return targetFrame(for: action, focusedWindow: focusedWindow)
+    func targetFrame(for action: RadialMenuAction, targetWindow: FocusedWindow?) -> CGRect? {
+        guard let targetWindow else { return nil }
+        return targetFrame(for: action, focusedWindow: targetWindow)
     }
 
-    func preview(for action: RadialMenuAction) -> WindowActionPreview? {
-        guard let focusedWindow = WindowUtility.focusedWindow() else { return nil }
+    func preview(for action: RadialMenuAction, targetWindow: FocusedWindow?) -> WindowActionPreview? {
+        guard let targetWindow else { return nil }
 
         if action.isDestructiveCommand {
-            return WindowActionPreview(frame: focusedWindow.frame, style: .danger)
+            return WindowActionPreview(frame: targetWindow.frame, style: .danger)
         }
 
-        guard let frame = targetFrame(for: action, focusedWindow: focusedWindow) else { return nil }
+        guard let frame = targetFrame(for: action, focusedWindow: targetWindow) else { return nil }
         return WindowActionPreview(frame: frame, style: .standard)
     }
 
     @discardableResult
-    func perform(_ action: RadialMenuAction) -> Bool {
+    func perform(_ action: RadialMenuAction, targetWindow: FocusedWindow?) -> Bool {
         AccessibilityManager.shared.refresh()
         guard AccessibilityManager.shared.isTrusted else {
             AccessibilityManager.shared.requestAccess()
             return false
         }
 
-        guard let focusedWindow = WindowUtility.focusedWindow() else { return false }
-        let currentFrame = focusedWindow.frame
+        guard let targetWindow else { return false }
+        let currentFrame = targetWindow.frame
 
         switch action.mode {
         case .noAction:
             return true
         case .windowCommand:
-            return performWindowCommand(action.windowCommand, focusedWindow: focusedWindow, currentFrame: currentFrame)
+            return performWindowCommand(action.windowCommand, focusedWindow: targetWindow, currentFrame: currentFrame)
         case .screenLayout where action.screenLayout == .systemFullScreen:
-            resizeContext.remember(pid: focusedWindow.application.processIdentifier, frame: currentFrame)
-            return WindowUtility.performFullScreen(for: focusedWindow.windowElement)
+            resizeContext.remember(pid: targetWindow.application.processIdentifier, frame: currentFrame)
+            return WindowUtility.performFullScreen(for: targetWindow.windowElement)
         case .fixedSize, .screenLayout, .relativeScale:
-            guard let targetFrame = targetFrame(for: action, focusedWindow: focusedWindow) else { return false }
-            resizeContext.remember(pid: focusedWindow.application.processIdentifier, frame: currentFrame)
+            guard let targetFrame = targetFrame(for: action, focusedWindow: targetWindow) else { return false }
+            resizeContext.remember(pid: targetWindow.application.processIdentifier, frame: currentFrame)
             let allowConstrainedResult = action.mode == .relativeScale && action.scaleDirection == .shrink
-            return applyFrame(targetFrame.integral, from: currentFrame, to: focusedWindow.windowElement, allowConstrainedResult: allowConstrainedResult)
+            return applyFrame(targetFrame.integral, from: currentFrame, to: targetWindow.windowElement, allowConstrainedResult: allowConstrainedResult)
         }
     }
 

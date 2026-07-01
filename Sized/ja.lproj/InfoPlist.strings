@@ -1,1 +1,1 @@
-"NSAccessibilityUsageDescription" = "Sized 需要辅助功能权限来读取并调整当前焦点窗口的位置和大小。";
+"NSAccessibilityUsageDescription" = "Sized は選択した対象ウィンドウの位置とサイズを読み取り、調整するためにアクセシビリティ権限が必要です。";

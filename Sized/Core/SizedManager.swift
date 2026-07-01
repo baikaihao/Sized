@@ -34,9 +34,11 @@ final class SizedManager: ObservableObject {
     private var triggerOrigin = CGPoint.zero
     private var selectedSlot: RadialMenuSlot?
     private var frontmostApplication: NSRunningApplication?
+    private var targetWindow: FocusedWindow?
     private var activeAssignments: AssignmentSettings = .default
     private var didStartEventTriggers = false
     private var didStartServices = false
+    private var loopTimeoutTask: Task<Void, Never>?
 
     private init() {}
 
@@ -70,6 +72,9 @@ final class SizedManager: ObservableObject {
 
     func stop() {
         stopEventTriggers()
+        isLoopActive = false
+        targetWindow = nil
+        stopLoopTimeout()
         mouseObserver.stop()
         stopEscapeMonitor()
         stopRightClickCancelMonitor()
@@ -101,10 +106,11 @@ final class SizedManager: ObservableObject {
         frontmostApplication = NSWorkspace.shared.frontmostApplication
         activeAssignments = settings.assignments(for: frontmostApplication)
         triggerOrigin = NSEvent.mouseLocation
+        targetWindow = WindowUtility.targetWindow(mode: settings.behavior.windowTargetMode, point: triggerOrigin)
         selectedSlot = nil
         isLoopActive = true
 
-        let hasWindow = windowActionEngine.hasFocusedWindow()
+        let hasWindow = windowActionEngine.hasTargetWindow(targetWindow)
         indicatorService.showRadialMenu(at: triggerOrigin, selectedSlot: nil, action: nil, assignments: activeAssignments, hasTargetWindow: hasWindow)
         mouseObserver.start(origin: triggerOrigin)
         if settings.behavior.escapeCancelsRadial {
@@ -113,13 +119,16 @@ final class SizedManager: ObservableObject {
         if settings.behavior.rightClickCancelsRadial {
             startRightClickCancelMonitor()
         }
+        startLoopTimeout()
     }
 
     private func endLoop(confirm: Bool) {
         guard isLoopActive else { return }
+        defer { targetWindow = nil }
 
         let slot = selectedSlot
         isLoopActive = false
+        stopLoopTimeout()
         mouseObserver.stop()
         stopEscapeMonitor()
         stopRightClickCancelMonitor()
@@ -133,17 +142,17 @@ final class SizedManager: ObservableObject {
             frontmostApplication.activate(options: [])
         }
 
-        let success = windowActionEngine.perform(action)
+        let success = windowActionEngine.perform(action, targetWindow: targetWindow)
         HapticFeedback.confirmed(enabled: success && settings.behavior.hapticFeedback)
     }
 
     private func updateSelection(_ slot: RadialMenuSlot?) {
         selectedSlot = slot
         let action = slot.map { activeAssignments[$0] }
-        let hasWindow = windowActionEngine.hasFocusedWindow()
+        let hasWindow = windowActionEngine.hasTargetWindow(targetWindow)
         indicatorService.updateRadialMenu(selectedSlot: slot, action: action, assignments: activeAssignments, hasTargetWindow: hasWindow)
 
-        if let action, let preview = windowActionEngine.preview(for: action) {
+        if let action, let preview = windowActionEngine.preview(for: action, targetWindow: targetWindow) {
             indicatorService.preview.show(frame: WindowUtility.axRectToAppKit(preview.frame), style: preview.style)
         } else {
             indicatorService.preview.hide()
@@ -219,6 +228,22 @@ final class SizedManager: ObservableObject {
     private func stopRightClickCancelMonitor() {
         rightClickCancelMonitor?.stop()
         rightClickCancelMonitor = nil
+    }
+
+    private func startLoopTimeout() {
+        stopLoopTimeout()
+
+        let timeout = max(0.5, settings.trigger.timeoutSeconds)
+        loopTimeoutTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            self?.endLoop(confirm: false)
+        }
+    }
+
+    private func stopLoopTimeout() {
+        loopTimeoutTask?.cancel()
+        loopTimeoutTask = nil
     }
 }
 

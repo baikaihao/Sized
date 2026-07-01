@@ -69,6 +69,9 @@
 "仅修改窗口大小，窗口位置由设置中的锚点规则决定。" = "Only changes the window size. Position follows the anchor rule in settings.";
 "调整规则" = "Resize Rule";
 "选择该槽位后，Sized 会把当前焦点窗口改为选中的宽高，并尽量保持当前位置关系。" = "When this slot is selected, Sized resizes the focused window to the selected width and height while preserving its position relationship where possible.";
+"选择该槽位后，Sized 会把目标窗口改为选中的宽高。" = "When this slot is selected, Sized resizes the target window to the selected width and height.";
+"选择该槽位时，目标窗口会显示红色遮罩作为警示。" = "When this slot is selected, the target window shows a red warning overlay.";
+"命令会作用于目标窗口或其所属应用。" = "Commands apply to the target window or its app.";
 "取消" = "Cancel";
 
 "为指定 App 配置独立轮盘分配；没有命中规则时使用默认尺寸分配。" = "Configure per-app wheel assignments. Default size assignments are used when no rule matches.";
@@ -110,6 +113,7 @@
 "侧键信号" = "Side button signal";
 "行为设置" = "Behavior Settings";
 "确认方式" = "Confirmation mode";
+"目标窗口" = "Target window";
 "窗口调整动画" = "Window resize animation";
 "启用窗口动画" = "Enable window animation";
 "窗口动画时长" = "Window animation duration";
@@ -135,6 +139,8 @@
 "弹性" = "Spring";
 "松开触发键" = "Release trigger key";
 "点击确认" = "Click to confirm";
+"当前焦点窗口" = "Focused window";
+"鼠标指向窗口" = "Window under pointer";
 "保持当前中心" = "Keep current center";
 "保持左上角" = "Keep top-left";
 "左侧 Option" = "Left Option";
