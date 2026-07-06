@@ -10,13 +10,15 @@ final class AppIconProvider: ObservableObject {
     private var appearanceObserver: NSKeyValueObservation?
 
     private init() {
-        currentIcon = Self.icon(for: NSApp.effectiveAppearance)
+        currentIcon = Self.defaultIcon()
     }
 
     func start() {
         updateIcon()
 
-        appearanceObserver = NSApp.observe(\.effectiveAppearance, options: [.new]) { _, _ in
+        guard appearanceObserver == nil else { return }
+
+        appearanceObserver = NSApplication.shared.observe(\.effectiveAppearance, options: [.new]) { _, _ in
             Task { @MainActor in
                 Self.shared.updateIcon()
             }
@@ -24,14 +26,19 @@ final class AppIconProvider: ObservableObject {
     }
 
     func updateIcon() {
-        let icon = Self.icon(for: NSApp.effectiveAppearance)
+        let application = NSApplication.shared
+        let icon = Self.icon(for: application.effectiveAppearance, fallback: application.applicationIconImage)
         currentIcon = icon
-        NSApp.applicationIconImage = icon
+        application.applicationIconImage = icon
     }
 
-    private static func icon(for appearance: NSAppearance) -> NSImage {
+    private static func icon(for appearance: NSAppearance, fallback: NSImage?) -> NSImage {
         let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         let assetName = isDark ? "AppIconDark" : "AppIconLight"
-        return NSImage(named: assetName) ?? NSApp.applicationIconImage ?? NSImage()
+        return NSImage(named: assetName) ?? fallback ?? defaultIcon()
+    }
+
+    private static func defaultIcon() -> NSImage {
+        NSImage(named: "AppIconLight") ?? NSImage(named: "AppIconDark") ?? NSImage()
     }
 }

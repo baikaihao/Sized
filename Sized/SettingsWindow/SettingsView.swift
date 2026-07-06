@@ -41,6 +41,12 @@ struct SettingsView: View {
             detailView
                 .frame(minWidth: 760, minHeight: 540)
         }
+        .onAppear {
+            SizedManager.shared.refreshPresentationSettings()
+        }
+        .onDisappear {
+            SizedManager.shared.refreshPresentationSettings(deferred: true)
+        }
     }
 
     @ViewBuilder

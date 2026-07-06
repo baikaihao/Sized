@@ -52,12 +52,11 @@ final class SizedManager: ObservableObject {
         }
 
         startEventTriggers()
-        StatusItemController.shared.applyVisibility(settings.general.showMenuBarIcon)
+        applyPresentationSettings(settings.general)
 
         settings.$general
-            .sink { general in
-                StatusItemController.shared.applyVisibility(general.showMenuBarIcon)
-                NSApp.setActivationPolicy(general.hideDockIcon ? .accessory : .regular)
+            .sink { [weak self] general in
+                self?.applyPresentationSettings(general)
             }
             .store(in: &cancellables)
 
@@ -92,6 +91,24 @@ final class SizedManager: ObservableObject {
         } else {
             AccessibilityManager.shared.startAutoRefresh()
         }
+    }
+
+    func refreshPresentationSettings(deferred: Bool = false) {
+        guard deferred else {
+            applyPresentationSettings(settings.general)
+            return
+        }
+
+        Task { @MainActor [weak self] in
+            await Task.yield()
+            guard let self else { return }
+            applyPresentationSettings(settings.general)
+        }
+    }
+
+    private func applyPresentationSettings(_ general: GeneralSettings) {
+        StatusItemController.shared.applyVisibility(general.showMenuBarIcon)
+        NSApp.setActivationPolicy(general.hideDockIcon ? .accessory : .regular)
     }
 
     private func beginLoop() {

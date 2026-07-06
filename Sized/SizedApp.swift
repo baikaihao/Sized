@@ -1,9 +1,19 @@
+import AppKit
 import SwiftUI
+
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        AppIconProvider.shared.start()
+        SizedManager.shared.start()
+    }
+}
 
 @main
 struct SizedApp: App {
     private static let mainWindowID = "main"
 
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.openWindow) private var openWindow
     @StateObject private var settings = SettingsStore.shared
 
@@ -11,7 +21,7 @@ struct SizedApp: App {
         WindowGroup("Sized", id: Self.mainWindowID) {
             SettingsView()
                 .environmentObject(settings)
-                .background(AppLifecycleView(onAppear: startServices))
+                .background(AppLifecycleView(onAppear: configureStatusItem))
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                     SizedManager.shared.refreshPermissions()
                 }
@@ -41,10 +51,8 @@ struct SizedApp: App {
     }
 
     @MainActor
-    private func startServices() {
-        AppIconProvider.shared.start()
+    private func configureStatusItem() {
         StatusItemController.shared.configure(openSized: openMainWindow)
-        SizedManager.shared.start()
     }
 }
 
