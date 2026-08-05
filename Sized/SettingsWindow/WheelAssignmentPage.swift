@@ -73,17 +73,35 @@ struct AssignmentEditor: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 28) {
-            SettingsSection(title: "可视化编辑器", systemImage: "circle.grid.cross") {
-                AssignmentGrid(assignments: $assignments, selectedSlot: $selectedSlot)
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: 28) {
+                visualEditor
+                    .frame(width: 430)
+
+                detailPanel
+                    .frame(minWidth: 560, maxWidth: .infinity)
+            }
+
+            VStack(alignment: .leading, spacing: 20) {
+                visualEditor
+                    .frame(maxWidth: .infinity)
+
+                detailPanel
                     .frame(maxWidth: .infinity)
             }
-            .frame(width: 430)
-
-            AssignmentDetailPanel(slot: selectedSlot, action: selectedAction)
-                .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var visualEditor: some View {
+        SettingsSection(title: "可视化编辑器", systemImage: "circle.grid.cross") {
+            AssignmentGrid(assignments: $assignments, selectedSlot: $selectedSlot)
+                .frame(maxWidth: .infinity)
+        }
+    }
+
+    private var detailPanel: some View {
+        AssignmentDetailPanel(slot: selectedSlot, action: selectedAction)
     }
 }
 
