@@ -156,6 +156,19 @@ enum WindowUtility {
         setFrameDetailed(frame, for: window).isSuccessful
     }
 
+    static func setFrameFast(_ frame: CGRect, for window: AXUIElement) -> Bool {
+        let frame = frame.integral
+        var position = frame.origin
+        var size = frame.size
+        guard let positionValue = AXValueCreate(.cgPoint, &position),
+              let sizeValue = AXValueCreate(.cgSize, &size)
+        else { return false }
+
+        let sizeResult = AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeValue)
+        let positionResult = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, positionValue)
+        return sizeResult == .success && positionResult == .success
+    }
+
     static func setFrameDetailed(_ frame: CGRect, for window: AXUIElement) -> WindowResizeResult {
         let requestedFrame = frame.integral
         let initialFrame = self.frame(of: window)

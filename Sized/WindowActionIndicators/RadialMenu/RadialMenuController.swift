@@ -5,6 +5,8 @@ import SwiftUI
 final class RadialMenuController {
     private var panel: ActivePanel?
     private var viewModel = RadialMenuViewModel()
+    private var hideWorkItem: DispatchWorkItem?
+    private var presentationGeneration = 0
     private var settings: SettingsStore { .shared }
 
     var isShown: Bool {
@@ -12,6 +14,11 @@ final class RadialMenuController {
     }
 
     func show(at origin: CGPoint, selectedSlot: RadialMenuSlot?, action: RadialMenuAction?, assignments: AssignmentSettings, hasTargetWindow: Bool) {
+        hideWorkItem?.cancel()
+        hideWorkItem = nil
+        presentationGeneration &+= 1
+        let generation = presentationGeneration
+
         let style = settings.wheelStyle
         let size = RadialMenuView.canvasSize(for: style)
         let screen = ScreenUtility.screen(containing: origin)
@@ -23,15 +30,16 @@ final class RadialMenuController {
 
         let panel = panel ?? makePanel(size: size)
         panel.setFrame(frame, display: true)
-        panel.contentView = NSHostingView(
-            rootView: RadialMenuPanelContent(viewModel: viewModel)
-                .environmentObject(settings)
-        )
 
         self.panel = panel
         panel.orderFrontRegardless()
 
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self, panel] in
+            guard let self,
+                  self.presentationGeneration == generation,
+                  self.panel === panel,
+                  panel.isVisible
+            else { return }
             self.viewModel.setIsShown(true)
         }
     }
@@ -42,14 +50,30 @@ final class RadialMenuController {
 
     func hide() {
         guard let panel else { return }
+        hideWorkItem?.cancel()
+        presentationGeneration &+= 1
+        let generation = presentationGeneration
         viewModel.setIsShown(false)
         let delay = settings.wheelStyle.appearanceAnimation ? 0.15 : 0
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+
+        let workItem = DispatchWorkItem { [weak self, panel] in
+            guard let self,
+                  self.presentationGeneration == generation,
+                  self.panel === panel
+            else { return }
             panel.orderOut(nil)
-            if self.panel === panel {
-                self.panel = nil
-            }
+            self.hideWorkItem = nil
         }
+        hideWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+    }
+
+    func hideImmediately() {
+        hideWorkItem?.cancel()
+        hideWorkItem = nil
+        presentationGeneration &+= 1
+        viewModel.setIsShown(false)
+        panel?.orderOut(nil)
     }
 
     private func makePanel(size: CGFloat) -> ActivePanel {
@@ -65,6 +89,10 @@ final class RadialMenuController {
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.level = .screenSaver
+        panel.contentView = NSHostingView(
+            rootView: RadialMenuPanelContent(viewModel: viewModel)
+                .environmentObject(settings)
+        )
         return panel
     }
 }

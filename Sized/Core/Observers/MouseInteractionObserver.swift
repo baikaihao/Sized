@@ -1,4 +1,5 @@
 import AppKit
+import OSLog
 
 @MainActor
 protocol MouseInteractionObserverDelegate: AnyObject {
@@ -18,10 +19,14 @@ final class MouseInteractionObserver {
     private var directionalActionDistance: CGFloat = 20
     private var pendingLocation: CGPoint?
     private var isMoveUpdateScheduled = false
+    private var interactionGeneration = 0
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Sized", category: "Trigger")
 
     private let noActionDistance: CGFloat = 3
 
     func start(origin: CGPoint) {
+        interactionGeneration &+= 1
+        let generation = interactionGeneration
         self.origin = origin
         let style = SettingsStore.shared.wheelStyle
         directionalActionDistance = max(
@@ -35,8 +40,11 @@ final class MouseInteractionObserver {
 
         let mask = 1 << CGEventType.leftMouseDown.rawValue
         clickMonitor = ActiveEventMonitor(mask: CGEventMask(mask)) { [weak self] _, _ in
-            DispatchQueue.main.async {
-                self?.delegate?.mouseDidClick()
+            Task { @MainActor [weak self] in
+                guard let self,
+                      self.interactionGeneration == generation,
+                      self.isActive else { return }
+                self.delegate?.mouseDidClick()
             }
             return .ignore
         }
@@ -44,6 +52,7 @@ final class MouseInteractionObserver {
     }
 
     func stop() {
+        interactionGeneration &+= 1
         isActive = false
         stopMoveMonitor()
         clickMonitor?.stop()
@@ -64,11 +73,15 @@ final class MouseInteractionObserver {
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
             place: .headInsertEventTap,
-            options: .defaultTap,
+            options: .listenOnly,
             eventsOfInterest: CGEventMask(mask),
             callback: { _, type, event, refcon in
                 guard let refcon else { return Unmanaged.passUnretained(event) }
                 let observer = Unmanaged<MouseInteractionObserver>.fromOpaque(refcon).takeUnretainedValue()
+                if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+                    observer.reenableMoveEventTap(disabledBy: type)
+                    return Unmanaged.passUnretained(event)
+                }
                 observer.scheduleMouseMoved()
                 return Unmanaged.passUnretained(event)
             },
@@ -89,6 +102,10 @@ final class MouseInteractionObserver {
         }
         if let runLoopSource = moveRunLoopSource {
             CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+            CFRunLoopSourceInvalidate(runLoopSource)
+        }
+        if let eventTap = moveEventTap {
+            CFMachPortInvalidate(eventTap)
         }
         moveEventTap = nil
         moveRunLoopSource = nil
@@ -117,5 +134,11 @@ final class MouseInteractionObserver {
             selectedSlot = slot
             delegate?.mouseSelectionDidChange(to: slot)
         }
+    }
+
+    private func reenableMoveEventTap(disabledBy type: CGEventType) {
+        guard let moveEventTap else { return }
+        logger.warning("MouseInteractionObserver event tap disabled by \(String(describing: type), privacy: .public); re-enabling")
+        CGEvent.tapEnable(tap: moveEventTap, enable: true)
     }
 }

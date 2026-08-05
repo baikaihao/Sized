@@ -1,5 +1,6 @@
 import AppKit
 import CoreGraphics
+import OSLog
 
 @MainActor
 protocol KeybindTriggerDelegate: AnyObject {
@@ -16,10 +17,14 @@ final class KeybindTrigger {
     private var isTriggerDown = false
     private var currentOptionKeycode: Int64 = 0
     private var currentTriggerKeycode: Int64 = 0
-    private var pendingWorkItem: DispatchWorkItem?
+    private var pendingBeginTask: Task<Void, Never>?
     private var lastTriggerDate: Date?
+    private var triggerStartedAt: Date?
+    private var monitorGeneration = 0
+    private var triggerGeneration = 0
     private var cachedKeybindingDisplayName = ""
     private var cachedKeybinding = ParsedKeybinding(modifiers: [], keyCode: 0, isValid: false)
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Sized", category: "Trigger")
     private var settings: SettingsStore { .shared }
     
     private struct ParsedKeybinding {
@@ -30,10 +35,30 @@ final class KeybindTrigger {
 
     func start() {
         guard monitor == nil else { return }
-        let mask = (1 << CGEventType.flagsChanged.rawValue) | (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
-        let monitor = ActiveEventMonitor(mask: CGEventMask(mask)) { [weak self] type, event in
+        monitorGeneration &+= 1
+        let generation = monitorGeneration
+        let mask: Int
+        if settings.trigger.useOptionAsTrigger {
+            mask = 1 << CGEventType.flagsChanged.rawValue
+        } else {
+            mask = (1 << CGEventType.flagsChanged.rawValue) | (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
+        }
+        let monitor = ActiveEventMonitor(
+            name: "KeybindTrigger",
+            mask: CGEventMask(mask),
+            placement: .headInsertEventTap,
+            options: .listenOnly
+        ) { [weak self] type, event in
+            if type == .keyDown,
+               event.getIntegerValueField(.keyboardEventAutorepeat) != 0 {
+                return .forward
+            }
+
+            let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+            let flags = event.flags
             DispatchQueue.main.async {
-                self?.handle(type: type, event: event)
+                guard let self, self.monitorGeneration == generation else { return }
+                self.handle(type: type, keyCode: keyCode, flags: flags)
             }
             return .forward
         }
@@ -41,51 +66,63 @@ final class KeybindTrigger {
         if !monitor.start() {
             self.monitor = nil
             delegate?.triggerMonitorDidFailToStart()
+            log("keybind monitor failed to start")
+        } else {
+            log("keybind monitor started")
         }
     }
 
     func stop() {
-        pendingWorkItem?.cancel()
-        pendingWorkItem = nil
+        monitorGeneration &+= 1
+        resetState(reason: "stop")
         monitor?.stop()
         monitor = nil
+    }
+
+    func resetState(reason: String) {
+        if isTriggerDown {
+            log("keybind reset state: \(reason)")
+        }
+        triggerGeneration &+= 1
+        pendingBeginTask?.cancel()
+        pendingBeginTask = nil
         isTriggerDown = false
         currentOptionKeycode = 0
         currentTriggerKeycode = 0
+        triggerStartedAt = nil
     }
 
-    private func handle(type: CGEventType, event: CGEvent) {
-        if type == .keyDown {
-            let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+    private func handle(type: CGEventType, keyCode: Int64, flags: CGEventFlags) {
+        if isTriggerDown, isTriggerStale {
+            resetState(reason: "stale trigger before event \(String(describing: type))")
+        }
 
+        if type == .keyDown {
             if keyCode == 53, isTriggerDown, settings.behavior.escapeCancelsRadial {
                 delegate?.triggerDidCancel()
-                isTriggerDown = false
+                resetState(reason: "escape cancel")
                 return
             }
 
             if !settings.trigger.useOptionAsTrigger {
                 let keybinding = currentKeybinding()
-                let eventModifiers = event.flags.intersection([.maskCommand, .maskShift, .maskControl, .maskAlternate])
+                let eventModifiers = flags.intersection([.maskCommand, .maskShift, .maskControl, .maskAlternate])
 
                 if keybinding.isValid &&
-                   keyCode == keybinding.keyCode &&
+                   keyCode == Int64(keybinding.keyCode) &&
                    eventModifiers == keybinding.modifiers &&
                    !isTriggerDown {
-                    currentTriggerKeycode = Int64(keyCode)
+                    currentTriggerKeycode = keyCode
                     beginTrigger()
                     return
                 }
 
                 if !isTriggerDown { return }
 
-                if keyCode == keybinding.keyCode && eventModifiers == keybinding.modifiers {
+                if keyCode == Int64(keybinding.keyCode) && eventModifiers == keybinding.modifiers {
                     return
                 } else {
-                    pendingWorkItem?.cancel()
-                    pendingWorkItem = nil
-                    isTriggerDown = false
-                    currentTriggerKeycode = 0
+                    resetState(reason: "different key down while active")
                     delegate?.triggerDidEnd(confirm: true)
                 }
             }
@@ -94,12 +131,8 @@ final class KeybindTrigger {
 
         if type == .keyUp {
             guard isTriggerDown, !settings.trigger.useOptionAsTrigger else { return }
-            let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
-            if Int64(keyCode) == currentTriggerKeycode {
-                pendingWorkItem?.cancel()
-                pendingWorkItem = nil
-                isTriggerDown = false
-                currentTriggerKeycode = 0
+            if keyCode == currentTriggerKeycode {
+                resetState(reason: "key up")
                 delegate?.triggerDidEnd(confirm: true)
             }
             return
@@ -107,9 +140,7 @@ final class KeybindTrigger {
 
         guard type == .flagsChanged else { return }
 
-        let flags = event.flags
         let optionDown = flags.contains(.maskAlternate)
-        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
         let isLeftOption = keyCode == 58
         let isRightOption = keyCode == 61
 
@@ -134,10 +165,7 @@ final class KeybindTrigger {
                 currentOptionKeycode = keyCode
                 beginTrigger()
             } else if !optionDown && matchesSide && isTriggerDown {
-                currentOptionKeycode = 0
-                pendingWorkItem?.cancel()
-                pendingWorkItem = nil
-                isTriggerDown = false
+                resetState(reason: "option up")
                 delegate?.triggerDidEnd(confirm: true)
             }
         } else if isTriggerDown {
@@ -146,10 +174,7 @@ final class KeybindTrigger {
             let triggerModifiers = keybinding.modifiers
             let currentModifiers = flags.intersection([.maskCommand, .maskShift, .maskControl, .maskAlternate])
             if !triggerModifiers.isEmpty && currentModifiers.intersection(triggerModifiers).isEmpty {
-                pendingWorkItem?.cancel()
-                pendingWorkItem = nil
-                isTriggerDown = false
-                currentTriggerKeycode = 0
+                resetState(reason: "modifier released")
                 delegate?.triggerDidEnd(confirm: true)
             }
         }
@@ -255,14 +280,32 @@ final class KeybindTrigger {
         }
 
         isTriggerDown = true
+        triggerStartedAt = now
         lastTriggerDate = now
+        triggerGeneration &+= 1
+        let generation = triggerGeneration
+        let delayNanoseconds = UInt64(max(0, settings.trigger.triggerDelayMilliseconds) * 1_000_000)
 
-        let workItem = DispatchWorkItem { [weak self] in
-            Task { @MainActor in
-                self?.delegate?.triggerDidBegin()
-            }
+        pendingBeginTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: delayNanoseconds)
+            guard !Task.isCancelled,
+                  let self,
+                  self.triggerGeneration == generation,
+                  self.isTriggerDown else { return }
+            self.pendingBeginTask = nil
+            self.log("keybind begin loop")
+            self.delegate?.triggerDidBegin()
         }
-        pendingWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + settings.trigger.triggerDelayMilliseconds / 1000, execute: workItem)
+    }
+
+    private var isTriggerStale: Bool {
+        guard let triggerStartedAt else { return false }
+        let timeout = settings.trigger.triggerDelayMilliseconds / 1000 + settings.trigger.timeoutSeconds + 1
+        return Date().timeIntervalSince(triggerStartedAt) > max(1, timeout)
+    }
+
+    private func log(_ message: String) {
+        guard settings.behavior.resizeDiagnostics else { return }
+        logger.info("\(message, privacy: .public)")
     }
 }

@@ -252,13 +252,15 @@ final class WindowActionEngine {
         let frameCount = max(1, Int(duration * resizeAnimationFrameRate))
         let frameDelay = UInt64(1_000_000_000 / resizeAnimationFrameRate)
 
-        for frameIndex in 1...frameCount {
-            if Task.isCancelled { return }
-            let progress = CGFloat(frameIndex) / CGFloat(frameCount)
-            let easedProgress = easeOutCubic(progress)
-            let frame = interpolate(from: startFrame, to: targetFrame, progress: easedProgress).integral
-            _ = WindowUtility.setFrameDetailed(frame, for: window)
-            try? await Task.sleep(nanoseconds: frameDelay)
+        if frameCount > 1 {
+            for frameIndex in 1..<frameCount {
+                if Task.isCancelled { return }
+                let progress = CGFloat(frameIndex) / CGFloat(frameCount)
+                let easedProgress = easeOutCubic(progress)
+                let frame = interpolate(from: startFrame, to: targetFrame, progress: easedProgress).integral
+                _ = WindowUtility.setFrameFast(frame, for: window)
+                try? await Task.sleep(nanoseconds: frameDelay)
+            }
         }
 
         if !Task.isCancelled {

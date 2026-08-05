@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import OSLog
 
 @MainActor
 final class SizedManager: ObservableObject {
@@ -8,6 +9,7 @@ final class SizedManager: ObservableObject {
     private let settings = SettingsStore.shared
     private let indicatorService = WindowActionIndicatorService()
     private let windowActionEngine = WindowActionEngine.shared
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Sized", category: "Trigger")
 
     private lazy var keybindTrigger: KeybindTrigger = {
         let trigger = KeybindTrigger()
@@ -39,6 +41,9 @@ final class SizedManager: ObservableObject {
     private var didStartEventTriggers = false
     private var didStartServices = false
     private var loopTimeoutTask: Task<Void, Never>?
+    private var loopStartedAt: Date?
+    private var interactionGeneration = 0
+    private let cancellationGate = InteractionCancellationGate()
 
     private init() {}
 
@@ -60,6 +65,14 @@ final class SizedManager: ObservableObject {
             }
             .store(in: &cancellables)
 
+        settings.$trigger
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] _ in
+                self?.restartEventTriggers()
+            }
+            .store(in: &cancellables)
+
         AccessibilityManager.shared.$isTrusted
             .removeDuplicates()
             .sink { [weak self] isTrusted in
@@ -71,6 +84,7 @@ final class SizedManager: ObservableObject {
 
     func stop() {
         stopEventTriggers()
+        invalidateInteractionGeneration()
         isLoopActive = false
         targetWindow = nil
         stopLoopTimeout()
@@ -85,6 +99,7 @@ final class SizedManager: ObservableObject {
     }
 
     func refreshPermissions() {
+        recoverStaleInteraction(reason: "refresh permissions")
         AccessibilityManager.shared.refresh()
         if AccessibilityManager.shared.isTrusted {
             restartEventTriggers()
@@ -112,20 +127,32 @@ final class SizedManager: ObservableObject {
     }
 
     private func beginLoop() {
-        guard !isLoopActive else { return }
+        if isLoopActive {
+            if isLoopStale {
+                forceResetInteraction(reason: "stale loop before new trigger")
+            } else {
+                log("begin loop ignored because loop is already active")
+                return
+            }
+        }
         AccessibilityManager.shared.refresh()
 
         guard AccessibilityManager.shared.isTrusted else {
             AccessibilityManager.shared.requestAccess()
+            log("begin loop blocked because accessibility is not trusted")
             return
         }
 
+        interactionGeneration &+= 1
+        cancellationGate.begin(generation: interactionGeneration)
         frontmostApplication = NSWorkspace.shared.frontmostApplication
         activeAssignments = settings.assignments(for: frontmostApplication)
         triggerOrigin = NSEvent.mouseLocation
         targetWindow = WindowUtility.targetWindow(mode: settings.behavior.windowTargetMode, point: triggerOrigin)
         selectedSlot = nil
         isLoopActive = true
+        loopStartedAt = Date()
+        log("begin loop at \(Int(triggerOrigin.x)),\(Int(triggerOrigin.y)) targetWindow=\(targetWindow == nil ? "none" : "available")")
 
         let hasWindow = windowActionEngine.hasTargetWindow(targetWindow)
         indicatorService.showRadialMenu(at: triggerOrigin, selectedSlot: nil, action: nil, assignments: activeAssignments, hasTargetWindow: hasWindow)
@@ -140,18 +167,30 @@ final class SizedManager: ObservableObject {
     }
 
     private func endLoop(confirm: Bool) {
-        guard isLoopActive else { return }
-        defer { targetWindow = nil }
+        guard isLoopActive else {
+            log("end loop ignored because loop is not active confirm=\(confirm)")
+            return
+        }
+        let generation = interactionGeneration
+        let wasCancelled = cancellationGate.finish(generation: generation)
+        let shouldConfirm = confirm && !wasCancelled
+        interactionGeneration &+= 1
+        defer {
+            targetWindow = nil
+            frontmostApplication = nil
+            loopStartedAt = nil
+        }
 
         let slot = selectedSlot
         isLoopActive = false
+        log("end loop confirm=\(shouldConfirm) slot=\(slot.map { String(describing: $0) } ?? "none")")
         stopLoopTimeout()
         mouseObserver.stop()
         stopEscapeMonitor()
         stopRightClickCancelMonitor()
         indicatorService.hideAll()
 
-        guard confirm, let slot else { return }
+        guard shouldConfirm, let slot else { return }
         let action = activeAssignments[slot]
         guard !action.isNoAction else { return }
 
@@ -181,7 +220,9 @@ final class SizedManager: ObservableObject {
     private func startEventTriggers() {
         guard !didStartEventTriggers else { return }
         keybindTrigger.start()
-        middleClickTrigger.start()
+        if settings.trigger.middleClickTrigger || settings.trigger.sideMouseButtonTrigger {
+            middleClickTrigger.start()
+        }
         didStartEventTriggers = true
     }
 
@@ -199,6 +240,8 @@ final class SizedManager: ObservableObject {
     private func startEscapeMonitor() {
         stopEscapeMonitor()
 
+        let generation = interactionGeneration
+        let cancellationGate = cancellationGate
         let mask = 1 << CGEventType.keyDown.rawValue
         let monitor = ActiveEventMonitor(mask: CGEventMask(mask)) { [weak self] type, event in
             guard type == .keyDown else { return .forward }
@@ -206,8 +249,12 @@ final class SizedManager: ObservableObject {
             let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
             guard keyCode == 53 else { return .forward }
 
+            cancellationGate.cancel(generation: generation)
             Task { @MainActor in
-                self?.endLoop(confirm: false)
+                guard let self,
+                      self.interactionGeneration == generation,
+                      self.isLoopActive else { return }
+                self.endLoop(confirm: false)
             }
             return .ignore
         }
@@ -227,11 +274,21 @@ final class SizedManager: ObservableObject {
     private func startRightClickCancelMonitor() {
         stopRightClickCancelMonitor()
 
+        let generation = interactionGeneration
+        let cancellationGate = cancellationGate
         let mask = 1 << CGEventType.rightMouseDown.rawValue
-        let monitor = ActiveEventMonitor(mask: CGEventMask(mask)) { [weak self] type, event in
+        let monitor = ActiveEventMonitor(
+            mask: CGEventMask(mask),
+            placement: .headInsertEventTap,
+            options: .defaultTap
+        ) { [weak self] type, _ in
             guard type == .rightMouseDown else { return .forward }
+            cancellationGate.cancel(generation: generation)
             Task { @MainActor in
-                self?.endLoop(confirm: false)
+                guard let self,
+                      self.interactionGeneration == generation,
+                      self.isLoopActive else { return }
+                self.endLoop(confirm: false)
             }
             return .forward
         }
@@ -251,16 +308,103 @@ final class SizedManager: ObservableObject {
         stopLoopTimeout()
 
         let timeout = max(0.5, settings.trigger.timeoutSeconds)
+        let generation = interactionGeneration
         loopTimeoutTask = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
-            guard !Task.isCancelled else { return }
-            self?.endLoop(confirm: false)
+            guard !Task.isCancelled,
+                  let self,
+                  self.interactionGeneration == generation,
+                  self.isLoopActive else { return }
+            self.log("loop timeout fired")
+            self.endLoop(confirm: false)
         }
     }
 
     private func stopLoopTimeout() {
         loopTimeoutTask?.cancel()
         loopTimeoutTask = nil
+    }
+
+    private var isLoopStale: Bool {
+        guard let loopStartedAt else { return false }
+        return Date().timeIntervalSince(loopStartedAt) > staleLoopTimeout
+    }
+
+    private var staleLoopTimeout: TimeInterval {
+        max(
+            1,
+            settings.trigger.triggerDelayMilliseconds / 1000 +
+            settings.trigger.timeoutSeconds +
+            settings.behavior.previewAnimationSpeed +
+            1
+        )
+    }
+
+    private func recoverStaleInteraction(reason: String) {
+        guard isLoopActive, isLoopStale else { return }
+        forceResetInteraction(reason: reason)
+    }
+
+    private func forceResetInteraction(reason: String) {
+        log("force reset interaction: \(reason)")
+        invalidateInteractionGeneration()
+        isLoopActive = false
+        selectedSlot = nil
+        targetWindow = nil
+        frontmostApplication = nil
+        loopStartedAt = nil
+        stopLoopTimeout()
+        mouseObserver.stop()
+        stopEscapeMonitor()
+        stopRightClickCancelMonitor()
+        indicatorService.hideAll(immediately: true)
+        keybindTrigger.resetState(reason: "manager force reset")
+        middleClickTrigger.resetState(reason: "manager force reset")
+    }
+
+    private func invalidateInteractionGeneration() {
+        cancellationGate.finish(generation: interactionGeneration)
+        interactionGeneration &+= 1
+    }
+
+    private func log(_ message: String) {
+        guard settings.behavior.resizeDiagnostics else { return }
+        logger.info("\(message, privacy: .public)")
+    }
+}
+
+private nonisolated final class InteractionCancellationGate: @unchecked Sendable {
+    private let lock = NSLock()
+    private var activeGeneration = 0
+    private var active = false
+    private var cancelled = false
+
+    func begin(generation: Int) {
+        lock.lock()
+        activeGeneration = generation
+        active = true
+        cancelled = false
+        lock.unlock()
+    }
+
+    func cancel(generation: Int) {
+        lock.lock()
+        if active, activeGeneration == generation {
+            cancelled = true
+        }
+        lock.unlock()
+    }
+
+    @discardableResult
+    func finish(generation: Int) -> Bool {
+        lock.lock()
+        let wasCancelled = active && activeGeneration == generation && cancelled
+        if activeGeneration == generation {
+            active = false
+            cancelled = false
+        }
+        lock.unlock()
+        return wasCancelled
     }
 }
 

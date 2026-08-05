@@ -13,8 +13,13 @@ final class WindowActionIndicatorService {
         radialMenu.update(selectedSlot: selectedSlot, action: action, assignments: assignments, hasTargetWindow: hasTargetWindow)
     }
 
-    func hideAll() {
-        radialMenu.hide()
-        preview.hide()
+    func hideAll(immediately: Bool = false) {
+        if immediately {
+            radialMenu.hideImmediately()
+            preview.hideImmediately()
+        } else {
+            radialMenu.hide()
+            preview.hide()
+        }
     }
 }

@@ -5,10 +5,15 @@ import SwiftUI
 final class PreviewController {
     private var panel: ActivePanel?
     private var isVisible = false
+    private var hideGeneration = 0
     private var settings: SettingsStore { .shared }
 
     func show(frame: CGRect, style: WindowActionPreviewStyle = .standard) {
-        guard settings.behavior.showPreview || style == .danger else { return }
+        guard settings.behavior.showPreview else {
+            hide()
+            return
+        }
+        hideGeneration += 1
         let inset = style == .danger ? 0 : CGFloat(settings.behavior.previewPadding)
         let displayFrame = frame.insetBy(dx: inset, dy: inset)
         let speed = settings.behavior.previewAnimationSpeed
@@ -16,14 +21,18 @@ final class PreviewController {
         let wasVisible = isVisible
         let panel = panel ?? makePanel()
         let rootView = PreviewView(settings: settings.behavior, style: style)
+        if let hostingView = panel.contentView as? NSHostingView<PreviewView> {
+            hostingView.rootView = rootView
+        } else {
+            panel.contentView = NSHostingView(rootView: rootView)
+        }
+        self.panel = panel
 
         if !wasVisible {
             panel.setFrame(displayFrame, display: false)
-            panel.contentView = NSHostingView(rootView: rootView)
             panel.alphaValue = 0
             panel.orderFrontRegardless()
             isVisible = true
-            self.panel = panel
 
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = speed * 0.75
@@ -31,12 +40,6 @@ final class PreviewController {
                 panel.animator().alphaValue = 1
             }
         } else {
-            if let hostingView = panel.contentView as? NSHostingView<PreviewView> {
-                hostingView.rootView = rootView
-            } else {
-                panel.contentView = NSHostingView(rootView: rootView)
-            }
-
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = speed
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
@@ -48,6 +51,8 @@ final class PreviewController {
     func hide() {
         guard let panel, isVisible else { return }
         isVisible = false
+        hideGeneration += 1
+        let generation = hideGeneration
         let speed = settings.behavior.previewAnimationSpeed
 
         NSAnimationContext.runAnimationGroup({ context in
@@ -57,14 +62,19 @@ final class PreviewController {
         }, completionHandler: { [weak self] in
             guard let controller = self else { return }
             Task { @MainActor [controller, panel] in
+                guard controller.hideGeneration == generation else { return }
                 guard !controller.isVisible else { return }
                 panel.orderOut(nil)
                 panel.alphaValue = 1
-                if controller.panel === panel {
-                    controller.panel = nil
-                }
             }
         })
+    }
+
+    func hideImmediately() {
+        hideGeneration += 1
+        isVisible = false
+        panel?.orderOut(nil)
+        panel?.alphaValue = 1
     }
 
     private func makePanel() -> ActivePanel {
