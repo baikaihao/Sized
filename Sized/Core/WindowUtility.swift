@@ -72,7 +72,6 @@ struct WindowResizeResult {
 enum WindowUtility {
     static func focusedWindow() -> FocusedWindow? {
         guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
-        guard app.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return nil }
 
         let appElement = AXUIElementCreateApplication(app.processIdentifier)
         var focusedValue: CFTypeRef?
@@ -97,7 +96,6 @@ enum WindowUtility {
         let screenPoint = appKitPointToAX(appKitPoint)
         guard let windowInfo = topWindowInfo(containing: screenPoint),
               let pid = windowInfo[kCGWindowOwnerPID as String] as? pid_t,
-              pid != ProcessInfo.processInfo.processIdentifier,
               let application = NSRunningApplication(processIdentifier: pid)
         else { return nil }
 
