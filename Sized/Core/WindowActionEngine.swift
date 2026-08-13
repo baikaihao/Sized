@@ -14,12 +14,16 @@ struct WindowActionPreview {
 
 @MainActor
 final class WindowActionEngine {
+    private struct ActiveResizeAnimation {
+        let window: AXUIElement
+        let animation: WindowTransformAnimation
+    }
+
     static let shared = WindowActionEngine()
 
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Sized", category: "WindowResize")
     private var resizeContext = ResizeContext()
-    private var resizeAnimationTask: Task<Void, Never>?
-    private let resizeAnimationFrameRate: Double = 60
+    private var activeResizeAnimations: [ActiveResizeAnimation] = []
 
     private init() {}
 
@@ -52,21 +56,34 @@ final class WindowActionEngine {
         }
 
         guard let targetWindow else { return false }
-        let currentFrame = targetWindow.frame
+        let currentFrame = WindowUtility.frame(of: targetWindow.windowElement) ?? targetWindow.frame
+        let currentWindow = FocusedWindow(
+            application: targetWindow.application,
+            appElement: targetWindow.appElement,
+            windowElement: targetWindow.windowElement,
+            frame: currentFrame
+        )
+        cancelResizeAnimation(for: targetWindow.windowElement)
 
         switch action.mode {
         case .noAction:
             return true
         case .windowCommand:
-            return performWindowCommand(action.windowCommand, focusedWindow: targetWindow, currentFrame: currentFrame)
+            return performWindowCommand(action.windowCommand, focusedWindow: currentWindow, currentFrame: currentFrame)
         case .screenLayout where action.screenLayout == .systemFullScreen:
             resizeContext.remember(pid: targetWindow.application.processIdentifier, frame: currentFrame)
             return WindowUtility.performFullScreen(for: targetWindow.windowElement)
         case .fixedSize, .screenLayout, .relativeScale:
-            guard let targetFrame = targetFrame(for: action, focusedWindow: targetWindow) else { return false }
+            guard let targetFrame = targetFrame(for: action, focusedWindow: currentWindow) else { return false }
             resizeContext.remember(pid: targetWindow.application.processIdentifier, frame: currentFrame)
             let allowConstrainedResult = action.mode == .relativeScale && action.scaleDirection == .shrink
-            return applyFrame(targetFrame.integral, from: currentFrame, to: targetWindow.windowElement, allowConstrainedResult: allowConstrainedResult)
+            return applyFrame(
+                targetFrame.integral,
+                from: currentFrame,
+                to: targetWindow.windowElement,
+                anchor: frameAnchor(for: action),
+                allowConstrainedResult: allowConstrainedResult
+            )
         }
     }
 
@@ -221,9 +238,33 @@ final class WindowActionEngine {
         return result
     }
 
-    private func applyFrame(_ targetFrame: CGRect, from currentFrame: CGRect, to window: AXUIElement, allowConstrainedResult: Bool = false) -> Bool {
+    private func frameAnchor(for action: RadialMenuAction) -> CGPoint {
+        switch action.mode {
+        case .fixedSize:
+            return SettingsStore.shared.behavior.resizeAnchor == .currentCenter
+                ? CGPoint(x: 0.5, y: 0.5)
+                : .zero
+        case .screenLayout:
+            return CGPoint(x: 0.5, y: 0.5)
+        case .relativeScale:
+            switch action.scaleAnchor {
+            case .topLeft: return .zero
+            case .topRight: return CGPoint(x: 1, y: 0)
+            case .center: return CGPoint(x: 0.5, y: 0.5)
+            }
+        case .windowCommand, .noAction:
+            return .zero
+        }
+    }
+
+    private func applyFrame(
+        _ targetFrame: CGRect,
+        from currentFrame: CGRect,
+        to window: AXUIElement,
+        anchor: CGPoint = .zero,
+        allowConstrainedResult: Bool = false
+    ) -> Bool {
         let targetFrame = targetFrame.integral
-        resizeAnimationTask?.cancel()
 
         guard SettingsStore.shared.behavior.resizeAnimation,
               !framesAreClose(currentFrame, targetFrame)
@@ -233,53 +274,34 @@ final class WindowActionEngine {
             return result.isSuccessful || (allowConstrainedResult && result.apiSucceeded)
         }
 
-        let startFrame = currentFrame.integral
-        let initialResult = WindowUtility.setFrameDetailed(startFrame, for: window)
-        guard initialResult.isSuccessful else {
-            log(initialResult, phase: "animated-start")
-            return false
+        let startFrame = (WindowUtility.frame(of: window) ?? currentFrame).integral
+        let screen = WindowUtility.screen(forAXFrame: targetFrame)
+        let bounds = WindowUtility.visibleAXFrame(for: screen)
+        let animation = WindowTransformAnimation(
+            from: startFrame,
+            to: targetFrame,
+            within: bounds,
+            anchor: anchor,
+            window: window,
+            duration: SettingsStore.shared.behavior.resizeAnimationDuration
+        ) { [weak self] animationID, cancelled in
+            guard let self,
+                  let index = self.activeResizeAnimations.firstIndex(where: { $0.animation.id == animationID })
+            else { return }
+            self.activeResizeAnimations.remove(at: index)
+            guard !cancelled else { return }
+            let result = WindowUtility.inspectFrame(targetFrame, for: window)
+            self.log(result, phase: "animated-final")
         }
-
-        resizeAnimationTask = Task { @MainActor [weak self] in
-            guard let self else { return }
-            await self.animateFrameChange(from: startFrame, to: targetFrame, for: window)
-        }
+        activeResizeAnimations.append(ActiveResizeAnimation(window: window, animation: animation))
+        animation.start()
         return true
     }
 
-    private func animateFrameChange(from startFrame: CGRect, to targetFrame: CGRect, for window: AXUIElement) async {
-        let duration = SettingsStore.shared.behavior.resizeAnimationDuration
-        let frameCount = max(1, Int(duration * resizeAnimationFrameRate))
-        let frameDelay = UInt64(1_000_000_000 / resizeAnimationFrameRate)
-
-        if frameCount > 1 {
-            for frameIndex in 1..<frameCount {
-                if Task.isCancelled { return }
-                let progress = CGFloat(frameIndex) / CGFloat(frameCount)
-                let easedProgress = easeOutCubic(progress)
-                let frame = interpolate(from: startFrame, to: targetFrame, progress: easedProgress).integral
-                _ = WindowUtility.setFrameFast(frame, for: window)
-                try? await Task.sleep(nanoseconds: frameDelay)
-            }
-        }
-
-        if !Task.isCancelled {
-            let result = WindowUtility.setFrameDetailed(targetFrame.integral, for: window)
-            log(result, phase: "animated-final")
-        }
-    }
-
-    private func interpolate(from startFrame: CGRect, to targetFrame: CGRect, progress: CGFloat) -> CGRect {
-        CGRect(
-            x: startFrame.minX + (targetFrame.minX - startFrame.minX) * progress,
-            y: startFrame.minY + (targetFrame.minY - startFrame.minY) * progress,
-            width: startFrame.width + (targetFrame.width - startFrame.width) * progress,
-            height: startFrame.height + (targetFrame.height - startFrame.height) * progress
-        )
-    }
-
-    private func easeOutCubic(_ progress: CGFloat) -> CGFloat {
-        1 - pow(1 - progress, 3)
+    private func cancelResizeAnimation(for window: AXUIElement) {
+        guard let index = activeResizeAnimations.firstIndex(where: { CFEqual($0.window, window) }) else { return }
+        let animation = activeResizeAnimations.remove(at: index).animation
+        animation.cancel()
     }
 
     private func framesAreClose(_ lhs: CGRect, _ rhs: CGRect) -> Bool {

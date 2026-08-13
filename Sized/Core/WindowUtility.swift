@@ -156,15 +156,21 @@ enum WindowUtility {
 
     static func setFrameFast(_ frame: CGRect, for window: AXUIElement) -> Bool {
         let frame = frame.integral
-        var position = frame.origin
-        var size = frame.size
-        guard let positionValue = AXValueCreate(.cgPoint, &position),
-              let sizeValue = AXValueCreate(.cgSize, &size)
-        else { return false }
-
-        let sizeResult = AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeValue)
-        let positionResult = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, positionValue)
+        let sizeResult = setSizeFast(frame.size, for: window)
+        let positionResult = setPositionFast(frame.origin, for: window)
         return sizeResult == .success && positionResult == .success
+    }
+
+    static func setPositionFast(_ position: CGPoint, for window: AXUIElement) -> AXError {
+        var position = position
+        guard let value = AXValueCreate(.cgPoint, &position) else { return .failure }
+        return AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, value)
+    }
+
+    static func setSizeFast(_ size: CGSize, for window: AXUIElement) -> AXError {
+        var size = size
+        guard let value = AXValueCreate(.cgSize, &size) else { return .failure }
+        return AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, value)
     }
 
     static func setFrameDetailed(_ frame: CGRect, for window: AXUIElement) -> WindowResizeResult {
@@ -196,8 +202,31 @@ enum WindowUtility {
             )
         }
 
+        var positionResult: AXError = .success
+        if let initialFrame {
+            var preResizePosition = initialFrame.origin
+            if requestedFrame.width > initialFrame.width + 1 {
+                preResizePosition.x = requestedFrame.minX
+            }
+            if requestedFrame.height > initialFrame.height + 1 {
+                preResizePosition.y = requestedFrame.minY
+            }
+            if abs(preResizePosition.x - initialFrame.minX) >= 1 ||
+                abs(preResizePosition.y - initialFrame.minY) >= 1 {
+                var position = preResizePosition
+                if let value = AXValueCreate(.cgPoint, &position) {
+                    positionResult = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, value)
+                } else {
+                    positionResult = .failure
+                }
+            }
+        }
+
         let sizeResult = AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeValue)
-        let positionResult = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, positionValue)
+        let finalPositionResult = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, positionValue)
+        if finalPositionResult != .success || positionResult == .success {
+            positionResult = finalPositionResult
+        }
 
         return WindowResizeResult(
             requestedFrame: requestedFrame,
@@ -211,6 +240,22 @@ enum WindowUtility {
             positionResult: positionResult,
             sizeResult: sizeResult,
             didCreateAXValues: true
+        )
+    }
+
+    static func inspectFrame(_ requestedFrame: CGRect, for window: AXUIElement) -> WindowResizeResult {
+        WindowResizeResult(
+            requestedFrame: requestedFrame.integral,
+            initialFrame: nil,
+            actualFrame: frame(of: window),
+            role: stringAttribute(kAXRoleAttribute, window: window),
+            subrole: stringAttribute(kAXSubroleAttribute, window: window),
+            title: stringAttribute(kAXTitleAttribute, window: window),
+            positionSettable: isAttributeSettable(kAXPositionAttribute, window: window),
+            sizeSettable: isAttributeSettable(kAXSizeAttribute, window: window),
+            positionResult: .success,
+            sizeResult: .success,
+            didCreateAXValues: false
         )
     }
 

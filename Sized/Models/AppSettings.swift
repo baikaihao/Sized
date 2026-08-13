@@ -274,7 +274,7 @@ struct BehaviorSettings: Codable, Equatable {
         confirmationMode: .release,
         windowTargetMode: .focused,
         resizeAnimation: true,
-        resizeAnimationDuration: 0.11,
+        resizeAnimationDuration: 0.3,
         resizeAnchor: .topLeft,
         ignoreFullScreenWindows: true,
         showPreview: true,
@@ -297,6 +297,7 @@ extension BehaviorSettings {
         case windowTargetMode
         case resizeAnimation
         case resizeAnimationDuration
+        case resizeAnimationTimingVersion
         case resizeAnchor
         case ignoreFullScreenWindows
         case showPreview
@@ -317,7 +318,15 @@ extension BehaviorSettings {
         confirmationMode = try container.decodeIfPresent(ConfirmationMode.self, forKey: .confirmationMode) ?? Self.default.confirmationMode
         windowTargetMode = try container.decodeIfPresent(WindowTargetMode.self, forKey: .windowTargetMode) ?? Self.default.windowTargetMode
         resizeAnimation = try container.decodeIfPresent(Bool.self, forKey: .resizeAnimation) ?? Self.default.resizeAnimation
-        resizeAnimationDuration = try container.decodeIfPresent(Double.self, forKey: .resizeAnimationDuration) ?? Self.default.resizeAnimationDuration
+        let decodedResizeAnimationDuration = try container.decodeIfPresent(Double.self, forKey: .resizeAnimationDuration)
+        let hasCurrentAnimationTiming = container.contains(.resizeAnimationTimingVersion)
+        if !hasCurrentAnimationTiming,
+           decodedResizeAnimationDuration == nil || abs((decodedResizeAnimationDuration ?? 0) - 0.11) < 0.000_1 {
+            resizeAnimationDuration = Self.default.resizeAnimationDuration
+        } else {
+            let duration = decodedResizeAnimationDuration ?? Self.default.resizeAnimationDuration
+            resizeAnimationDuration = min(max(duration, 0.05), 0.5)
+        }
         resizeAnchor = try container.decodeIfPresent(ResizeAnchor.self, forKey: .resizeAnchor) ?? Self.default.resizeAnchor
         ignoreFullScreenWindows = try container.decodeIfPresent(Bool.self, forKey: .ignoreFullScreenWindows) ?? Self.default.ignoreFullScreenWindows
         showPreview = try container.decodeIfPresent(Bool.self, forKey: .showPreview) ?? Self.default.showPreview
@@ -339,6 +348,7 @@ extension BehaviorSettings {
         try container.encode(windowTargetMode, forKey: .windowTargetMode)
         try container.encode(resizeAnimation, forKey: .resizeAnimation)
         try container.encode(resizeAnimationDuration, forKey: .resizeAnimationDuration)
+        try container.encode(1, forKey: .resizeAnimationTimingVersion)
         try container.encode(resizeAnchor, forKey: .resizeAnchor)
         try container.encode(ignoreFullScreenWindows, forKey: .ignoreFullScreenWindows)
         try container.encode(showPreview, forKey: .showPreview)
