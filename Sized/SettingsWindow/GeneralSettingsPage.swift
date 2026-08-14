@@ -35,6 +35,7 @@ struct GeneralSettingsPage: View {
 
                 Toggle("在菜单栏中显示图标", isOn: $settings.general.showMenuBarIcon)
                 Toggle("隐藏 Dock 图标", isOn: $settings.general.hideDockIcon)
+                    .disabled(!settings.general.showMenuBarIcon)
             }
 
             SettingsSection(title: "辅助功能权限", systemImage: "accessibility") {

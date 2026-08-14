@@ -123,7 +123,8 @@ final class SizedManager: ObservableObject {
 
     private func applyPresentationSettings(_ general: GeneralSettings) {
         StatusItemController.shared.applyVisibility(general.showMenuBarIcon)
-        NSApp.setActivationPolicy(general.hideDockIcon ? .accessory : .regular)
+        let canHideDockIcon = general.hideDockIcon && general.showMenuBarIcon
+        NSApp.setActivationPolicy(canHideDockIcon ? .accessory : .regular)
     }
 
     private func beginLoop() {

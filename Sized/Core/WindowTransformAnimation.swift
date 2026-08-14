@@ -136,18 +136,33 @@ nonisolated final class WindowTransformAnimation: @unchecked Sendable {
             return
         }
 
-        applyPosition(for: requestedFrame.size, in: requestedFrame, progress: progress)
+        let growsHorizontally = requestedFrame.width > lastAppliedFrame.width
+        let growsVertically = requestedFrame.height > lastAppliedFrame.height
+        if growsHorizontally || growsVertically {
+            let requestedOrigin = anchoredOrigin(
+                for: requestedFrame.size,
+                in: requestedFrame,
+                clampToTargetBounds: progress >= 0.999
+            )
+            var preResizeOrigin = lastAppliedFrame.origin
+            if growsHorizontally {
+                preResizeOrigin.x = requestedOrigin.x
+            }
+            if growsVertically {
+                preResizeOrigin.y = requestedOrigin.y
+            }
+            applyPosition(preResizeOrigin)
+        }
+
         let sizeResult = WindowUtility.setSizeFast(requestedFrame.size, for: window)
 
-        var actualSize = requestedFrame.size
+        var actualSize = lastAppliedFrame.size
         if sizeResult == .success {
             actualSize = WindowUtility.size(of: window) ?? requestedFrame.size
         }
 
-        if actualSize != requestedFrame.size {
-            applyPosition(for: actualSize, in: requestedFrame, progress: progress)
-        }
         lastAppliedFrame.size = actualSize
+        applyPosition(for: actualSize, in: requestedFrame, progress: progress)
     }
 
     private func applyPosition(for actualSize: CGSize, in requestedFrame: CGRect, progress: CGFloat) {
@@ -156,6 +171,10 @@ nonisolated final class WindowTransformAnimation: @unchecked Sendable {
             in: requestedFrame,
             clampToTargetBounds: progress >= 0.999
         )
+        applyPosition(origin)
+    }
+
+    private func applyPosition(_ origin: CGPoint) {
         guard !pointsAreClose(lastAppliedFrame.origin, origin) else { return }
         if WindowUtility.setPositionFast(origin, for: window) == .success {
             lastAppliedFrame.origin = origin

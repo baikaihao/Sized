@@ -18,10 +18,11 @@ struct SizedApp: App {
     @StateObject private var settings = SettingsStore.shared
 
     var body: some Scene {
+        let _ = configureStatusItem()
+
         WindowGroup("Sized", id: Self.mainWindowID) {
             SettingsView()
                 .environmentObject(settings)
-                .background(AppLifecycleView(onAppear: configureStatusItem))
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                     SizedManager.shared.refreshPermissions()
                 }
@@ -39,33 +40,33 @@ struct SizedApp: App {
     }
 
     private func openMainWindow() {
+        NSApp.activate(ignoringOtherApps: true)
+
+        if bringMainWindowToFront() {
+            return
+        }
+
+        openWindow(id: Self.mainWindowID)
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            _ = self.bringMainWindowToFront()
+        }
+    }
+
+    @discardableResult
+    private func bringMainWindowToFront() -> Bool {
         if let window = NSApp.windows.first(where: { $0.title == "Sized" }) {
             if window.isMiniaturized {
                 window.deminiaturize(nil)
             }
             window.makeKeyAndOrderFront(nil)
-        } else {
-            openWindow(id: Self.mainWindowID)
+            return true
         }
-        NSApp.activate(ignoringOtherApps: true)
+        return false
     }
 
     @MainActor
     private func configureStatusItem() {
         StatusItemController.shared.configure(openSized: openMainWindow)
     }
-}
-
-private struct AppLifecycleView: NSViewRepresentable {
-    let onAppear: () -> Void
-
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        DispatchQueue.main.async {
-            onAppear()
-        }
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {}
 }
