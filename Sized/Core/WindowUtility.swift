@@ -72,7 +72,10 @@ struct WindowResizeResult {
 enum WindowUtility {
     static func focusedWindow() -> FocusedWindow? {
         guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
+        return focusedWindow(in: app)
+    }
 
+    static func focusedWindow(in app: NSRunningApplication) -> FocusedWindow? {
         let appElement = AXUIElementCreateApplication(app.processIdentifier)
         var focusedValue: CFTypeRef?
         let focusedResult = AXUIElementCopyAttributeValue(appElement, kAXFocusedWindowAttribute as CFString, &focusedValue)
@@ -92,30 +95,41 @@ enum WindowUtility {
         return FocusedWindow(application: app, appElement: appElement, windowElement: windowElement, frame: frame)
     }
 
-    static func window(at appKitPoint: CGPoint) -> FocusedWindow? {
+    static func window(at appKitPoint: CGPoint, fallbackApplication: NSRunningApplication? = nil) -> FocusedWindow? {
         let screenPoint = appKitPointToAX(appKitPoint)
         guard let windowInfo = topWindowInfo(containing: screenPoint),
               let pid = windowInfo[kCGWindowOwnerPID as String] as? pid_t,
               let application = NSRunningApplication(processIdentifier: pid)
-        else { return nil }
+        else { return fallbackFocusedWindow(fallbackApplication) }
 
         let appElement = AXUIElementCreateApplication(pid)
         guard let windowElement = window(in: appElement, containing: screenPoint) ?? firstWindow(in: appElement),
               let frame = frame(of: windowElement)
         else {
-            return focusedWindow()
+            return fallbackFocusedWindow(fallbackApplication)
         }
 
         return FocusedWindow(application: application, appElement: appElement, windowElement: windowElement, frame: frame)
     }
 
-    static func targetWindow(mode: WindowTargetMode, point: CGPoint) -> FocusedWindow? {
+    static func targetWindow(
+        mode: WindowTargetMode,
+        point: CGPoint,
+        fallbackApplication: NSRunningApplication? = nil
+    ) -> FocusedWindow? {
         switch mode {
         case .focused:
-            return focusedWindow()
+            return fallbackFocusedWindow(fallbackApplication)
         case .mouse:
-            return window(at: point) ?? focusedWindow()
+            return window(at: point, fallbackApplication: fallbackApplication)
         }
+    }
+
+    private static func fallbackFocusedWindow(_ application: NSRunningApplication?) -> FocusedWindow? {
+        if let application {
+            return focusedWindow(in: application)
+        }
+        return focusedWindow()
     }
 
     static func firstWindow(in appElement: AXUIElement) -> AXUIElement? {
@@ -144,10 +158,14 @@ enum WindowUtility {
 
     static func frame(of window: AXUIElement) -> CGRect? {
         guard let position = pointAttribute(kAXPositionAttribute, window: window),
-              let size = sizeAttribute(kAXSizeAttribute, window: window)
+              let size = size(of: window)
         else { return nil }
 
         return CGRect(origin: position, size: size)
+    }
+
+    nonisolated static func size(of window: AXUIElement) -> CGSize? {
+        sizeAttribute(kAXSizeAttribute, window: window)
     }
 
     static func setFrame(_ frame: CGRect, for window: AXUIElement) -> Bool {
@@ -161,13 +179,13 @@ enum WindowUtility {
         return sizeResult == .success && positionResult == .success
     }
 
-    static func setPositionFast(_ position: CGPoint, for window: AXUIElement) -> AXError {
+    nonisolated static func setPositionFast(_ position: CGPoint, for window: AXUIElement) -> AXError {
         var position = position
         guard let value = AXValueCreate(.cgPoint, &position) else { return .failure }
         return AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, value)
     }
 
-    static func setSizeFast(_ size: CGSize, for window: AXUIElement) -> AXError {
+    nonisolated static func setSizeFast(_ size: CGSize, for window: AXUIElement) -> AXError {
         var size = size
         guard let value = AXValueCreate(.cgSize, &size) else { return .failure }
         return AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, value)
@@ -354,7 +372,7 @@ enum WindowUtility {
         return point
     }
 
-    private static func sizeAttribute(_ attribute: String, window: AXUIElement) -> CGSize? {
+    private nonisolated static func sizeAttribute(_ attribute: String, window: AXUIElement) -> CGSize? {
         var value: CFTypeRef?
         guard AXUIElementCopyAttributeValue(window, attribute as CFString, &value) == .success,
               let value,

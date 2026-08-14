@@ -145,10 +145,15 @@ final class SizedManager: ObservableObject {
 
         interactionGeneration &+= 1
         cancellationGate.begin(generation: interactionGeneration)
-        frontmostApplication = NSWorkspace.shared.frontmostApplication
-        activeAssignments = settings.assignments(for: frontmostApplication)
+        let sourceApplication = NSWorkspace.shared.frontmostApplication
         triggerOrigin = NSEvent.mouseLocation
-        targetWindow = WindowUtility.targetWindow(mode: settings.behavior.windowTargetMode, point: triggerOrigin)
+        targetWindow = WindowUtility.targetWindow(
+            mode: settings.behavior.windowTargetMode,
+            point: triggerOrigin,
+            fallbackApplication: sourceApplication
+        )
+        frontmostApplication = targetWindow?.application ?? sourceApplication
+        activeAssignments = settings.assignments(for: frontmostApplication)
         selectedSlot = nil
         isLoopActive = true
         loopStartedAt = Date()

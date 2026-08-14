@@ -245,7 +245,22 @@ final class WindowActionEngine {
                 ? CGPoint(x: 0.5, y: 0.5)
                 : .zero
         case .screenLayout:
-            return CGPoint(x: 0.5, y: 0.5)
+            switch action.screenLayout {
+            case .fillVisible, .centerThird, .systemFullScreen:
+                return CGPoint(x: 0.5, y: 0.5)
+            case .leftHalf, .leftThird:
+                return CGPoint(x: 0, y: 0.5)
+            case .rightHalf, .rightThird:
+                return CGPoint(x: 1, y: 0.5)
+            case .topLeftQuarter:
+                return .zero
+            case .topRightQuarter:
+                return CGPoint(x: 1, y: 0)
+            case .bottomLeftQuarter:
+                return CGPoint(x: 0, y: 1)
+            case .bottomRightQuarter:
+                return CGPoint(x: 1, y: 1)
+            }
         case .relativeScale:
             switch action.scaleAnchor {
             case .topLeft: return .zero
@@ -289,7 +304,7 @@ final class WindowActionEngine {
                   let index = self.activeResizeAnimations.firstIndex(where: { $0.animation.id == animationID })
             else { return }
             self.activeResizeAnimations.remove(at: index)
-            guard !cancelled else { return }
+            guard !cancelled, SettingsStore.shared.behavior.resizeDiagnostics else { return }
             let result = WindowUtility.inspectFrame(targetFrame, for: window)
             self.log(result, phase: "animated-final")
         }

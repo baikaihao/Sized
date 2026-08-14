@@ -258,6 +258,7 @@
 				CURRENT_PROJECT_VERSION = 20260805;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
+				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -268,6 +269,10 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.2.5;
+				OTHER_CODE_SIGN_FLAGS = (
+					"--requirements",
+					"$(SRCROOT)/Sized.debug.requirements",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = bkh.Sized;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
