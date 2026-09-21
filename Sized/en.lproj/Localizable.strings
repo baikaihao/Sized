@@ -45,6 +45,7 @@
 "取消方式" = "Cancel Behavior";
 "ESC 键取消轮盘" = "ESC cancels wheel";
 "鼠标右键取消轮盘" = "Right click cancels wheel";
+"其他按键取消轮盘" = "Other key cancels wheel";
 "模拟目标窗口区域" = "Simulated target window area";
 "圆角" = "Corner";
 "边框" = "Border";

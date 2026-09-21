@@ -37,9 +37,13 @@ final class KeybindTrigger {
         guard monitor == nil else { return }
         monitorGeneration &+= 1
         let generation = monitorGeneration
+        let useOptionAsTrigger = settings.trigger.useOptionAsTrigger
+        let keybinding: ParsedKeybinding = useOptionAsTrigger
+            ? ParsedKeybinding(modifiers: [], keyCode: 0, isValid: false)
+            : currentKeybinding()
         let mask: Int
-        if settings.trigger.useOptionAsTrigger {
-            mask = 1 << CGEventType.flagsChanged.rawValue
+        if useOptionAsTrigger {
+            mask = (1 << CGEventType.flagsChanged.rawValue) | (1 << CGEventType.keyDown.rawValue)
         } else {
             mask = (1 << CGEventType.flagsChanged.rawValue) | (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
         }
@@ -47,20 +51,28 @@ final class KeybindTrigger {
             name: "KeybindTrigger",
             mask: CGEventMask(mask),
             placement: .headInsertEventTap,
-            options: .listenOnly
+            options: .defaultTap
         ) { [weak self] type, event in
-            if type == .keyDown,
-               event.getIntegerValueField(.keyboardEventAutorepeat) != 0 {
-                return .forward
-            }
-
             let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
             let flags = event.flags
-            DispatchQueue.main.async {
-                guard let self, self.monitorGeneration == generation else { return }
-                self.handle(type: type, keyCode: keyCode, flags: flags)
+            let isAutorepeat = type == .keyDown && event.getIntegerValueField(.keyboardEventAutorepeat) != 0
+
+            // 自定义快捷键模式下吞掉触发键本身，消除系统提示音并阻止透传给前台应用
+            var swallow = false
+            if !useOptionAsTrigger, keybinding.isValid,
+               (type == .keyDown || type == .keyUp),
+               keyCode == Int64(keybinding.keyCode) {
+                let eventModifiers = flags.intersection([.maskCommand, .maskShift, .maskControl, .maskAlternate])
+                swallow = eventModifiers == keybinding.modifiers
             }
-            return .forward
+
+            if !isAutorepeat {
+                DispatchQueue.main.async {
+                    guard let self, self.monitorGeneration == generation else { return }
+                    self.handle(type: type, keyCode: keyCode, flags: flags)
+                }
+            }
+            return swallow ? .ignore : .forward
         }
         self.monitor = monitor
         if !monitor.start() {
@@ -104,6 +116,14 @@ final class KeybindTrigger {
                 return
             }
 
+            if settings.trigger.useOptionAsTrigger,
+               isTriggerDown,
+               settings.behavior.otherKeyCancelsRadial {
+                delegate?.triggerDidCancel()
+                resetState(reason: "other key cancel")
+                return
+            }
+
             if !settings.trigger.useOptionAsTrigger {
                 let keybinding = currentKeybinding()
                 let eventModifiers = flags.intersection([.maskCommand, .maskShift, .maskControl, .maskAlternate])
@@ -123,7 +143,11 @@ final class KeybindTrigger {
                     return
                 } else {
                     resetState(reason: "different key down while active")
-                    delegate?.triggerDidEnd(confirm: true)
+                    if settings.behavior.otherKeyCancelsRadial {
+                        delegate?.triggerDidCancel()
+                    } else {
+                        delegate?.triggerDidEnd(confirm: true)
+                    }
                 }
             }
             return

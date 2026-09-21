@@ -110,6 +110,12 @@ struct GeneralSettingsPage: View {
                 Toggle("窗口调整诊断日志", isOn: $settings.behavior.resizeDiagnostics)
             }
 
+            SettingsSection(title: "取消方式", systemImage: "xmark.circle") {
+                Toggle("ESC 键取消轮盘", isOn: $settings.behavior.escapeCancelsRadial)
+                Toggle("鼠标右键取消轮盘", isOn: $settings.behavior.rightClickCancelsRadial)
+                Toggle("其他按键取消轮盘", isOn: $settings.behavior.otherKeyCancelsRadial)
+            }
+
             SettingsSection(title: "重置与支持", systemImage: "questionmark.circle") {
                 HStack {
                     Button(role: .destructive) {
