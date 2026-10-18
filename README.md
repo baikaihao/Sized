@@ -99,7 +99,7 @@ Sized works locally through macOS accessibility APIs. Settings are stored locall
 
 ### Acknowledgments
 
-Inspired by [Loop](https://github.com/MrKai77/Loop).
+Inspired by [Loop](https://github.com/MrKai77/Loop). Window transform animation and preview transitions are adapted from Loop by Kai Azim and contributors; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ---
 
@@ -178,7 +178,7 @@ Sized 通过 macOS 辅助功能 API 在本机工作。设置保存在本地 User
 
 ### 致谢
 
-灵感来源于 [Loop](https://github.com/MrKai77/Loop)。
+灵感来源于 [Loop](https://github.com/MrKai77/Loop)。窗口变换动画与预览过渡改编自 Kai Azim 及贡献者的 Loop 实现，详见 [第三方声明](THIRD_PARTY_NOTICES.md)。
 
 ---
 

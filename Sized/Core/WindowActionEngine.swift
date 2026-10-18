@@ -56,6 +56,7 @@ final class WindowActionEngine {
         }
 
         guard let targetWindow else { return false }
+        cancelResizeAnimation(for: targetWindow.windowElement)
         let currentFrame = WindowUtility.frame(of: targetWindow.windowElement) ?? targetWindow.frame
         let currentWindow = FocusedWindow(
             application: targetWindow.application,
@@ -63,7 +64,6 @@ final class WindowActionEngine {
             windowElement: targetWindow.windowElement,
             frame: currentFrame
         )
-        cancelResizeAnimation(for: targetWindow.windowElement)
 
         switch action.mode {
         case .noAction:
@@ -238,29 +238,14 @@ final class WindowActionEngine {
         return result
     }
 
-    private func frameAnchor(for action: RadialMenuAction) -> CGPoint {
+    private func frameAnchor(for action: RadialMenuAction) -> CGPoint? {
         switch action.mode {
         case .fixedSize:
             return SettingsStore.shared.behavior.resizeAnchor == .currentCenter
                 ? CGPoint(x: 0.5, y: 0.5)
                 : .zero
         case .screenLayout:
-            switch action.screenLayout {
-            case .fillVisible, .centerThird, .systemFullScreen:
-                return CGPoint(x: 0.5, y: 0.5)
-            case .leftHalf, .leftThird:
-                return CGPoint(x: 0, y: 0.5)
-            case .rightHalf, .rightThird:
-                return CGPoint(x: 1, y: 0.5)
-            case .topLeftQuarter:
-                return .zero
-            case .topRightQuarter:
-                return CGPoint(x: 1, y: 0)
-            case .bottomLeftQuarter:
-                return CGPoint(x: 0, y: 1)
-            case .bottomRightQuarter:
-                return CGPoint(x: 1, y: 1)
-            }
+            return nil
         case .relativeScale:
             switch action.scaleAnchor {
             case .topLeft: return .zero
@@ -268,7 +253,7 @@ final class WindowActionEngine {
             case .center: return CGPoint(x: 0.5, y: 0.5)
             }
         case .windowCommand, .noAction:
-            return .zero
+            return nil
         }
     }
 
@@ -276,12 +261,14 @@ final class WindowActionEngine {
         _ targetFrame: CGRect,
         from currentFrame: CGRect,
         to window: AXUIElement,
-        anchor: CGPoint = .zero,
+        anchor: CGPoint? = nil,
         allowConstrainedResult: Bool = false
     ) -> Bool {
         let targetFrame = targetFrame.integral
 
         guard SettingsStore.shared.behavior.resizeAnimation,
+              !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
+              !WindowUtility.hasEnhancedUserInterface(window),
               !framesAreClose(currentFrame, targetFrame)
         else {
             let result = WindowUtility.setFrameDetailed(targetFrame, for: window)
@@ -291,7 +278,8 @@ final class WindowActionEngine {
 
         let startFrame = (WindowUtility.frame(of: window) ?? currentFrame).integral
         let screen = WindowUtility.screen(forAXFrame: targetFrame)
-        let bounds = WindowUtility.visibleAXFrame(for: screen)
+        let sourceScreen = WindowUtility.screen(forAXFrame: startFrame)
+        let bounds = sourceScreen == screen ? WindowUtility.visibleAXFrame(for: screen) : .zero
         let animation = WindowTransformAnimation(
             from: startFrame,
             to: targetFrame,

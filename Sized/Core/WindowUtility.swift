@@ -168,6 +168,23 @@ enum WindowUtility {
         sizeAttribute(kAXSizeAttribute, window: window)
     }
 
+    static func isResizable(_ window: AXUIElement) -> Bool {
+        isAttributeSettable(kAXSizeAttribute, window: window) ?? true
+    }
+
+    static func hasEnhancedUserInterface(_ window: AXUIElement) -> Bool {
+        guard let app = applicationElement(for: window) else { return false }
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(app, "AXEnhancedUserInterface" as CFString, &value) == .success else { return false }
+        return (value as? Bool) == true
+    }
+
+    private static func applicationElement(for window: AXUIElement) -> AXUIElement? {
+        var pid: pid_t = 0
+        guard AXUIElementGetPid(window, &pid) == .success else { return nil }
+        return AXUIElementCreateApplication(pid)
+    }
+
     static func setFrame(_ frame: CGRect, for window: AXUIElement) -> Bool {
         setFrameDetailed(frame, for: window).isSuccessful
     }
@@ -192,6 +209,17 @@ enum WindowUtility {
     }
 
     static func setFrameDetailed(_ frame: CGRect, for window: AXUIElement) -> WindowResizeResult {
+        // Loop bypasses frame-by-frame animation for enhanced-UI apps and
+        // temporarily suspends that mode while applying the final frame.
+        let enhancedApp = hasEnhancedUserInterface(window) ? applicationElement(for: window) : nil
+        if let enhancedApp {
+            AXUIElementSetAttributeValue(enhancedApp, "AXEnhancedUserInterface" as CFString, kCFBooleanFalse)
+        }
+        defer {
+            if let enhancedApp {
+                AXUIElementSetAttributeValue(enhancedApp, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue)
+            }
+        }
         let requestedFrame = frame.integral
         let initialFrame = self.frame(of: window)
         let role = stringAttribute(kAXRoleAttribute, window: window)
@@ -200,8 +228,8 @@ enum WindowUtility {
         let positionSettable = isAttributeSettable(kAXPositionAttribute, window: window)
         let sizeSettable = isAttributeSettable(kAXSizeAttribute, window: window)
 
-        var position = frame.origin
-        var size = frame.size
+        var position = requestedFrame.origin
+        var size = requestedFrame.size
         guard let positionValue = AXValueCreate(.cgPoint, &position),
               let sizeValue = AXValueCreate(.cgSize, &size)
         else {
