@@ -21,6 +21,11 @@ final class WindowActionEngine {
 
     static let shared = WindowActionEngine()
 
+    /// The frame the window really reached during the most recent `perform`, when the resize
+    /// was a single write. Nothing else can know it: the app is free to answer a different
+    /// size than the one it was asked for.
+    private(set) var landedFrame: CGRect?
+
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Sized", category: "WindowResize")
     private var resizeContext = ResizeContext()
     private var activeResizeAnimations: [ActiveResizeAnimation] = []
@@ -49,6 +54,7 @@ final class WindowActionEngine {
 
     @discardableResult
     func perform(_ action: RadialMenuAction, targetWindow: FocusedWindow?) -> Bool {
+        landedFrame = nil
         AccessibilityManager.shared.refresh()
         guard AccessibilityManager.shared.isTrusted else {
             AccessibilityManager.shared.requestAccess()
@@ -76,13 +82,11 @@ final class WindowActionEngine {
         case .fixedSize, .screenLayout, .relativeScale:
             guard let targetFrame = targetFrame(for: action, focusedWindow: currentWindow) else { return false }
             resizeContext.remember(pid: targetWindow.application.processIdentifier, frame: currentFrame)
-            let allowConstrainedResult = action.mode == .relativeScale && action.scaleDirection == .shrink
             return applyFrame(
                 targetFrame.integral,
                 from: currentFrame,
                 to: targetWindow.windowElement,
-                anchor: frameAnchor(for: action),
-                allowConstrainedResult: allowConstrainedResult
+                anchor: frameAnchor(for: action)
             )
         }
     }
@@ -261,29 +265,40 @@ final class WindowActionEngine {
         _ targetFrame: CGRect,
         from currentFrame: CGRect,
         to window: AXUIElement,
-        anchor: CGPoint? = nil,
-        allowConstrainedResult: Bool = false
+        anchor: CGPoint? = nil
     ) -> Bool {
         let targetFrame = targetFrame.integral
+        let properties = WindowEngine.resolveProperties(for: window)
+        let screen = WindowUtility.screen(forAXFrame: targetFrame)
+        let changesScreen = WindowUtility.screen(forAXFrame: currentFrame) != screen
+        // Crossing screens leaves the frame of the destination, so neither screen's
+        // visible area may clamp it.
+        let bounds = changesScreen ? .zero : WindowUtility.visibleAXFrame(for: screen)
 
-        guard SettingsStore.shared.behavior.resizeAnimation,
-              !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
-              !WindowUtility.hasEnhancedUserInterface(window),
-              !framesAreClose(currentFrame, targetFrame)
-        else {
-            let result = WindowUtility.setFrameDetailed(targetFrame, for: window)
-            log(result, phase: "direct")
-            return result.isSuccessful || (allowConstrainedResult && result.apiSucceeded)
+        guard WindowEngine.shouldAnimate(
+            explicitlyEnabled: SettingsStore.shared.behavior.resizeAnimation,
+            properties: properties
+        ), !framesAreClose(currentFrame, targetFrame) else {
+            let result = WindowEngine.resize(
+                window: window,
+                to: targetFrame,
+                bounds: bounds,
+                sizeFirst: changesScreen,
+                properties: properties,
+                diagnostics: SettingsStore.shared.behavior.resizeDiagnostics
+            )
+            log(result, phase: "snap")
+            landedFrame = result.isSuccessful ? result.actualFrame : nil
+            return result.isSuccessful
         }
 
         let startFrame = (WindowUtility.frame(of: window) ?? currentFrame).integral
-        let screen = WindowUtility.screen(forAXFrame: targetFrame)
         let sourceScreen = WindowUtility.screen(forAXFrame: startFrame)
-        let bounds = sourceScreen == screen ? WindowUtility.visibleAXFrame(for: screen) : .zero
+        let animationBounds = sourceScreen == screen ? WindowUtility.visibleAXFrame(for: screen) : .zero
         let animation = WindowTransformAnimation(
             from: startFrame,
             to: targetFrame,
-            within: bounds,
+            within: animationBounds,
             anchor: anchor,
             window: window,
             duration: SettingsStore.shared.behavior.resizeAnimationDuration
@@ -315,7 +330,14 @@ final class WindowActionEngine {
     }
 
     private func log(_ result: WindowResizeResult, phase: String) {
-        guard SettingsStore.shared.behavior.resizeDiagnostics || !result.isSuccessful else { return }
+        // The app overriding the size is the one case where the window cannot land on the
+        // preview box, and it is invisible in the UI, so it is always worth a log line.
+        let deviatedFromPreview = result.actualFrame.map {
+            abs($0.width - result.requestedFrame.width) > 2 ||
+                abs($0.height - result.requestedFrame.height) > 2
+        } ?? false
+
+        guard SettingsStore.shared.behavior.resizeDiagnostics || !result.isSuccessful || deviatedFromPreview else { return }
         if result.isSuccessful {
             logger.info("Resize \(phase, privacy: .public) succeeded: \(result.diagnosticDescription, privacy: .public)")
         } else {

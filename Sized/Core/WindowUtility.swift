@@ -8,67 +8,6 @@ struct FocusedWindow {
     let frame: CGRect
 }
 
-struct WindowResizeResult {
-    let requestedFrame: CGRect
-    let initialFrame: CGRect?
-    let actualFrame: CGRect?
-    let role: String?
-    let subrole: String?
-    let title: String?
-    let positionSettable: Bool?
-    let sizeSettable: Bool?
-    let positionResult: AXError
-    let sizeResult: AXError
-    let didCreateAXValues: Bool
-
-    var apiSucceeded: Bool {
-        didCreateAXValues && positionResult == .success && sizeResult == .success
-    }
-
-    var reachedTarget: Bool {
-        guard let actualFrame else { return false }
-        return Self.framesAreClose(actualFrame, requestedFrame)
-    }
-
-    var isSuccessful: Bool {
-        reachedTarget
-    }
-
-    var diagnosticDescription: String {
-        [
-            "role=\(role ?? "unknown")",
-            "subrole=\(subrole ?? "unknown")",
-            "title=\(title ?? "untitled")",
-            "positionSettable=\(Self.optionalBoolDescription(positionSettable))",
-            "sizeSettable=\(Self.optionalBoolDescription(sizeSettable))",
-            "positionResult=\(positionResult.diagnosticDescription)",
-            "sizeResult=\(sizeResult.diagnosticDescription)",
-            "requested=\(Self.frameDescription(requestedFrame))",
-            "before=\(Self.frameDescription(initialFrame))",
-            "actual=\(Self.frameDescription(actualFrame))",
-            "apiSucceeded=\(apiSucceeded)",
-            "reachedTarget=\(reachedTarget)"
-        ].joined(separator: " ")
-    }
-
-    static func frameDescription(_ frame: CGRect?) -> String {
-        guard let frame else { return "nil" }
-        return "x:\(Int(frame.minX)) y:\(Int(frame.minY)) w:\(Int(frame.width)) h:\(Int(frame.height))"
-    }
-
-    private static func optionalBoolDescription(_ value: Bool?) -> String {
-        guard let value else { return "unknown" }
-        return value ? "true" : "false"
-    }
-
-    private static func framesAreClose(_ lhs: CGRect, _ rhs: CGRect) -> Bool {
-        abs(lhs.minX - rhs.minX) < 2 &&
-            abs(lhs.minY - rhs.minY) < 2 &&
-            abs(lhs.width - rhs.width) < 2 &&
-            abs(lhs.height - rhs.height) < 2
-    }
-}
-
 enum WindowUtility {
     static func focusedWindow() -> FocusedWindow? {
         guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
@@ -185,17 +124,6 @@ enum WindowUtility {
         return AXUIElementCreateApplication(pid)
     }
 
-    static func setFrame(_ frame: CGRect, for window: AXUIElement) -> Bool {
-        setFrameDetailed(frame, for: window).isSuccessful
-    }
-
-    static func setFrameFast(_ frame: CGRect, for window: AXUIElement) -> Bool {
-        let frame = frame.integral
-        let sizeResult = setSizeFast(frame.size, for: window)
-        let positionResult = setPositionFast(frame.origin, for: window)
-        return sizeResult == .success && positionResult == .success
-    }
-
     nonisolated static func setPositionFast(_ position: CGPoint, for window: AXUIElement) -> AXError {
         var position = position
         guard let value = AXValueCreate(.cgPoint, &position) else { return .failure }
@@ -208,85 +136,31 @@ enum WindowUtility {
         return AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, value)
     }
 
-    static func setFrameDetailed(_ frame: CGRect, for window: AXUIElement) -> WindowResizeResult {
-        // Loop bypasses frame-by-frame animation for enhanced-UI apps and
-        // temporarily suspends that mode while applying the final frame.
-        let enhancedApp = hasEnhancedUserInterface(window) ? applicationElement(for: window) : nil
-        if let enhancedApp {
-            AXUIElementSetAttributeValue(enhancedApp, "AXEnhancedUserInterface" as CFString, kCFBooleanFalse)
-        }
-        defer {
-            if let enhancedApp {
-                AXUIElementSetAttributeValue(enhancedApp, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue)
-            }
-        }
-        let requestedFrame = frame.integral
-        let initialFrame = self.frame(of: window)
-        let role = stringAttribute(kAXRoleAttribute, window: window)
-        let subrole = stringAttribute(kAXSubroleAttribute, window: window)
-        let title = stringAttribute(kAXTitleAttribute, window: window)
-        let positionSettable = isAttributeSettable(kAXPositionAttribute, window: window)
-        let sizeSettable = isAttributeSettable(kAXSizeAttribute, window: window)
+    /// Loop resizes enhanced-UI apps with AppKit rather than letting them keep their own
+    /// window placement; toggling the mode off is what makes an instant frame stick.
+    static func setEnhancedUserInterface(_ enabled: Bool, for window: AXUIElement) {
+        guard let app = applicationElement(for: window) else { return }
+        AXUIElementSetAttributeValue(app, "AXEnhancedUserInterface" as CFString, enabled as CFBoolean)
+    }
 
-        var position = requestedFrame.origin
-        var size = requestedFrame.size
-        guard let positionValue = AXValueCreate(.cgPoint, &position),
-              let sizeValue = AXValueCreate(.cgSize, &size)
-        else {
-            return WindowResizeResult(
-                requestedFrame: requestedFrame,
-                initialFrame: initialFrame,
-                actualFrame: self.frame(of: window),
-                role: role,
-                subrole: subrole,
-                title: title,
-                positionSettable: positionSettable,
-                sizeSettable: sizeSettable,
-                positionResult: .failure,
-                sizeResult: .failure,
-                didCreateAXValues: false
-            )
-        }
-
-        var positionResult: AXError = .success
-        if let initialFrame {
-            var preResizePosition = initialFrame.origin
-            if requestedFrame.width > initialFrame.width + 1 {
-                preResizePosition.x = requestedFrame.minX
-            }
-            if requestedFrame.height > initialFrame.height + 1 {
-                preResizePosition.y = requestedFrame.minY
-            }
-            if abs(preResizePosition.x - initialFrame.minX) >= 1 ||
-                abs(preResizePosition.y - initialFrame.minY) >= 1 {
-                var position = preResizePosition
-                if let value = AXValueCreate(.cgPoint, &position) {
-                    positionResult = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, value)
-                } else {
-                    positionResult = .failure
-                }
-            }
-        }
-
-        let sizeResult = AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeValue)
-        let finalPositionResult = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, positionValue)
-        if finalPositionResult != .success || positionResult == .success {
-            positionResult = finalPositionResult
-        }
-
-        return WindowResizeResult(
-            requestedFrame: requestedFrame,
-            initialFrame: initialFrame,
-            actualFrame: self.frame(of: window),
-            role: role,
-            subrole: subrole,
-            title: title,
-            positionSettable: positionSettable,
-            sizeSettable: sizeSettable,
-            positionResult: positionResult,
-            sizeResult: sizeResult,
-            didCreateAXValues: true
+    /// Only read when a resize needs explaining: five extra cross-process calls per
+    /// window, none of which are needed to actually move it.
+    static func resizeMetadata(for window: AXUIElement) -> ResizeMetadata {
+        ResizeMetadata(
+            role: stringAttribute(kAXRoleAttribute, window: window),
+            subrole: stringAttribute(kAXSubroleAttribute, window: window),
+            title: stringAttribute(kAXTitleAttribute, window: window),
+            positionSettable: isAttributeSettable(kAXPositionAttribute, window: window),
+            sizeSettable: isAttributeSettable(kAXSizeAttribute, window: window)
         )
+    }
+
+    struct ResizeMetadata {
+        let role: String?
+        let subrole: String?
+        let title: String?
+        let positionSettable: Bool?
+        let sizeSettable: Bool?
     }
 
     static func inspectFrame(_ requestedFrame: CGRect, for window: AXUIElement) -> WindowResizeResult {
@@ -441,7 +315,7 @@ enum WindowUtility {
     }
 }
 
-private extension AXError {
+extension AXError {
     var diagnosticDescription: String {
         switch self {
         case .success: "success"

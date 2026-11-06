@@ -6,6 +6,8 @@ trap 'rm -rf "$sized_test_dir"' EXIT
 xcrun swiftc -parse-as-library -swift-version 5 -default-isolation MainActor \
     -enable-upcoming-feature MemberImportVisibility \
     "$sized_root/Sized/Core/WindowTransformAnimation.swift" \
+    "$sized_root/Sized/Core/WindowResizeResult.swift" \
+    "$sized_root/Sized/Core/WindowEngine.swift" \
     "$sized_root/Sized/WindowActionIndicators/PreviewWindow/PreviewController.swift" \
     "$sized_root/Sized/WindowActionIndicators/PreviewWindow/PreviewView.swift" \
     "$sized_root/Sized/WindowActionIndicators/ActivePanel.swift" \

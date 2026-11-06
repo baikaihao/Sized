@@ -15,6 +15,13 @@ enum WindowUtility {
     static var valid = true
     static var writes = 0
     static var sizeWrites = 0
+    static var order: [String] = []
+    static var visible = CGRect.zero
+    static var enhancedUserInterface = false
+    static var enhancedUserInterfaceLog: [Bool] = []
+    /// An app in the middle of its own layout pass answers the AX calls but ignores them.
+    static var dropsFirstAttempt = false
+    static var attempt = 0
 
     static func reset(_ frame: CGRect) {
         actual = frame
@@ -25,22 +32,62 @@ enum WindowUtility {
         valid = true
         writes = 0
         sizeWrites = 0
+        order = []
+        visible = CGRect.zero
+        enhancedUserInterface = false
+        enhancedUserInterfaceLog = []
+        dropsFirstAttempt = false
+        attempt = 0
     }
 
-    static func frame(of window: AXUIElement) -> CGRect? { valid ? actual : nil }
+    static func frame(of window: AXUIElement) -> CGRect? {
+        attempt += 1
+        return valid ? actual : nil
+    }
     static func isResizable(_ window: AXUIElement) -> Bool { resizable }
     static func screen(forAXFrame frame: CGRect) -> NSScreen { NSScreen.screens[0] }
+    static func visibleAXFrame(for screen: NSScreen) -> CGRect { visible }
+    static func hasEnhancedUserInterface(_ window: AXUIElement) -> Bool { enhancedUserInterface }
+    static func setEnhancedUserInterface(_ enabled: Bool, for window: AXUIElement) {
+        enhancedUserInterface = enabled
+        enhancedUserInterfaceLog.append(enabled)
+    }
+
+    struct ResizeMetadata {
+        let role: String?
+        let subrole: String?
+        let title: String?
+        let positionSettable: Bool?
+        let sizeSettable: Bool?
+    }
+
+    static func resizeMetadata(for window: AXUIElement) -> ResizeMetadata {
+        ResizeMetadata(
+            role: "AXWindow",
+            subrole: "AXStandardWindow",
+            title: "Test Window",
+            positionSettable: true,
+            sizeSettable: resizable
+        )
+    }
+
+    private static func droppedWrite() -> Bool { dropsFirstAttempt && attempt <= 1 }
+
     static func axRectToAppKit(_ frame: CGRect) -> CGRect {
         CGRect(x: frame.minX, y: NSScreen.screens[0].frame.maxY - frame.maxY, width: frame.width, height: frame.height)
     }
     static func setPositionFast(_ position: CGPoint, for window: AXUIElement) -> AXError {
         writes += 1
+        order.append("position")
+        guard !droppedWrite() else { return .success }
         actual.origin = position
         return .success
     }
     static func setSizeFast(_ size: CGSize, for window: AXUIElement) -> AXError {
         writes += 1
         sizeWrites += 1
+        order.append("size")
+        guard !droppedWrite() else { return .success }
         guard resizable else { return .attributeUnsupported }
         var size = CGSize(width: max(minimum.width, size.width), height: max(minimum.height, size.height))
         if let fixedWidth { size.width = fixedWidth }
@@ -52,6 +99,10 @@ enum WindowUtility {
         actual.size = size
         return .success
     }
+}
+
+extension AXError {
+    var diagnosticDescription: String { self == .success ? "success" : "failure" }
 }
 
 // Only the settings consumed by the production preview are needed here.
@@ -176,6 +227,83 @@ struct WindowAnimationChecks {
         pump(0.45)
         check(WindowUtility.actual == target && completions == [false], "Nonblocking NSAnimation runs to completion on the live run loop")
 
+        // MARK: - Loop's snap path: one write, one read-back, no interpolation.
+
+        func snap(
+            _ frame: CGRect,
+            to target: CGRect,
+            bounds: CGRect,
+            sizeFirst: Bool = false,
+            resizable: Bool = true,
+            enhancedUserInterface: Bool = false,
+            configure: (() -> Void)? = nil
+        ) -> WindowResizeResult {
+            WindowUtility.reset(frame)
+            WindowUtility.visible = bounds
+            WindowUtility.resizable = resizable
+            WindowUtility.enhancedUserInterface = enhancedUserInterface
+            configure?()
+            return WindowEngine.resize(
+                window: window,
+                to: target,
+                bounds: bounds,
+                sizeFirst: sizeFirst,
+                properties: .init(isResizable: resizable, enhancedUserInterface: enhancedUserInterface),
+                diagnostics: false
+            )
+        }
+
+        check(!WindowEngine.shouldAnimate(explicitlyEnabled: false, properties: .init(isResizable: true, enhancedUserInterface: false)), "Animation stays off unless it is asked for")
+        check(!WindowEngine.shouldAnimate(explicitlyEnabled: true, properties: .init(isResizable: true, enhancedUserInterface: true)), "Enhanced UI apps never interpolate")
+
+        var result = snap(original, to: target, bounds: bounds)
+        check(WindowUtility.actual == target, "Snap reaches the target")
+        check(WindowUtility.writes == 2, "Snap costs one position write and one size write")
+        check(result.isSuccessful && !result.sizeWasConstrained, "An unconstrained snap is not flagged as constrained")
+
+        result = snap(
+            original,
+            to: CGRect(x: 1000, y: 600, width: 200, height: 100),
+            bounds: bounds
+        ) {
+            WindowUtility.minimum = CGSize(width: 500, height: 300)
+        }
+        check(WindowUtility.actual == CGRect(x: 850, y: 500, width: 500, height: 300), "A window held at its minimum size stays centered on the frame it was aimed at")
+        check(result.isSuccessful && result.sizeWasConstrained, "A clamped resize counts as successful once re-anchored")
+
+        result = snap(original, to: target, bounds: bounds) {
+            WindowUtility.minimum = CGSize(width: 900, height: 900)
+        }
+        check(WindowUtility.actual == CGRect(x: 540, y: 0, width: 900, height: 900), "A right-half resize that a minimum width stretches keeps its right edge on the screen")
+
+        _ = snap(original, to: target, bounds: bounds) {
+            WindowUtility.fixedWidth = original.width
+        }
+        check(WindowUtility.actual == CGRect(x: 840, y: 0, width: 600, height: 900), "A fixed-width window is pushed back against the target edge")
+
+        result = snap(original, to: target, bounds: bounds) {
+            WindowUtility.dropsFirstAttempt = true
+        }
+        check(WindowUtility.actual == target, "A dropped first attempt is written again")
+        check(WindowUtility.writes == 4, "The retry is the only extra round trip")
+
+        result = snap(original, to: target, bounds: bounds, enhancedUserInterface: true)
+        check(WindowUtility.enhancedUserInterfaceLog == [false, true], "Enhanced UI is suspended for the write and restored after it")
+        check(result.isSuccessful, "An enhanced UI window still reaches its target")
+
+        result = snap(original, to: CGRect(x: 40, y: 50, width: 600, height: 400), bounds: bounds, resizable: false)
+        check(WindowUtility.sizeWrites == 0, "No size write is sent to a nonresizable window")
+        check(WindowUtility.actual.origin == CGPoint(x: 40, y: 50) && result.isSuccessful, "A nonresizable window still moves")
+
+        _ = snap(original, to: otherScreen, bounds: .zero, sizeFirst: true)
+        check(WindowUtility.order == ["size", "position", "size"], "Crossing screens sizes the window before moving it")
+
+        result = snap(original, to: target, bounds: bounds) {
+            WindowUtility.valid = false
+        }
+        check(!result.isSuccessful, "A window that stopped answering is reported as a failure")
+        check(result.role == "AXWindow", "A failed snap carries the window metadata for the log")
+
         let preview = PreviewController()
         preview.show(frame: original)
         pump(0.08)
@@ -193,6 +321,15 @@ struct WindowAnimationChecks {
         preview.show(frame: original)
         preview.hideImmediately()
         check(!panel.isVisible, "Immediate cancellation removes the preview")
+        preview.show(frame: original)
+        pump(0.08)
+        preview.settle(frame: target)
+        pump(0.08)
+        check(panel.isVisible, "The box stays on screen while the window answers")
+        pump(0.15)
+        check(!panel.isVisible, "The box dissolves once it has been moved onto the window")
+        preview.settle(frame: original)
+        check(!panel.isVisible, "Settling a preview that is already gone leaves it gone")
         SettingsStore.shared.behavior.showPreview = false
         preview.show(frame: target)
         check(!panel.isVisible, "Disabled preview remains hidden")

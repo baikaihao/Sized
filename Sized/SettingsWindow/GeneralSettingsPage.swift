@@ -101,8 +101,8 @@ struct GeneralSettingsPage: View {
             SettingsSection(title: "行为设置", systemImage: "cursorarrow.motionlines") {
                 PickerRow(title: "确认方式", selection: $settings.behavior.confirmationMode)
                 PickerRow(title: "目标窗口", selection: $settings.behavior.windowTargetMode)
-                Toggle("启用窗口动画", isOn: $settings.behavior.resizeAnimation)
-                SliderRowDecimal(title: "窗口动画时长", value: $settings.behavior.resizeAnimationDuration, range: 0.05...0.5, step: 0.01, suffix: "秒")
+                Toggle("逐帧窗口动画（旧方案，可能卡顿）", isOn: $settings.behavior.resizeAnimation)
+                SliderRowDecimal(title: "逐帧动画时长", value: $settings.behavior.resizeAnimationDuration, range: 0.05...0.5, step: 0.01, suffix: "秒")
                     .disabled(!settings.behavior.resizeAnimation)
                 PickerRow(title: "改尺寸锚点", selection: $settings.behavior.resizeAnchor)
                 Toggle("忽略全屏窗口", isOn: $settings.behavior.ignoreFullScreenWindows)

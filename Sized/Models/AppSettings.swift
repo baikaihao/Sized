@@ -274,7 +274,7 @@ struct BehaviorSettings: Codable, Equatable {
     static let `default` = BehaviorSettings(
         confirmationMode: .release,
         windowTargetMode: .focused,
-        resizeAnimation: true,
+        resizeAnimation: false,
         resizeAnimationDuration: 0.3,
         resizeAnchor: .topLeft,
         ignoreFullScreenWindows: true,
@@ -297,7 +297,9 @@ extension BehaviorSettings {
     private enum CodingKeys: String, CodingKey {
         case confirmationMode
         case windowTargetMode
-        case resizeAnimation
+        // Renamed key: a saved `resizeAnimation: true` from the old default would
+        // otherwise keep the frame-by-frame path alive after it stopped being the default.
+        case resizeAnimation = "legacyResizeAnimation"
         case resizeAnimationDuration
         case resizeAnimationTimingVersion
         case resizeAnchor

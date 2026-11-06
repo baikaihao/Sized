@@ -194,17 +194,30 @@ final class SizedManager: ObservableObject {
         mouseObserver.stop()
         stopEscapeMonitor()
         stopRightClickCancelMonitor()
-        indicatorService.hideAll()
+        indicatorService.radialMenu.hide()
 
-        guard shouldConfirm, let slot else { return }
+        guard shouldConfirm, let slot else {
+            indicatorService.preview.hide()
+            return
+        }
         let action = activeAssignments[slot]
-        guard !action.isNoAction else { return }
+        guard !action.isNoAction else {
+            indicatorService.preview.hide()
+            return
+        }
 
         if let frontmostApplication {
             frontmostApplication.activate(options: [])
         }
 
         let success = windowActionEngine.perform(action, targetWindow: targetWindow)
+        // The box holds its shape while the window answers, then moves onto wherever the
+        // window actually ended up before it dissolves.
+        if let landedFrame = windowActionEngine.landedFrame {
+            indicatorService.preview.settle(frame: landedFrame)
+        } else {
+            indicatorService.preview.hide()
+        }
         HapticFeedback.confirmed(enabled: success && settings.behavior.hapticFeedback)
     }
 
@@ -215,7 +228,8 @@ final class SizedManager: ObservableObject {
         indicatorService.updateRadialMenu(selectedSlot: slot, action: action, assignments: activeAssignments, hasTargetWindow: hasWindow)
 
         if let action, let preview = windowActionEngine.preview(for: action, targetWindow: targetWindow) {
-            indicatorService.preview.show(frame: WindowUtility.axRectToAppKit(preview.frame), style: preview.style)
+            // `preview.frame` is already in AX space, which is what `show` takes.
+            indicatorService.preview.show(frame: preview.frame, style: preview.style)
         } else {
             indicatorService.preview.hide()
         }
@@ -224,7 +238,9 @@ final class SizedManager: ObservableObject {
     }
 
     private func startEventTriggers() {
-        guard !didStartEventTriggers else { return }
+        // Every restart path runs through here, so a pause cannot be undone by a settings
+        // change or by accessibility permission arriving late.
+        guard !didStartEventTriggers, !isPaused else { return }
         keybindTrigger.start()
         if settings.trigger.middleClickTrigger || settings.trigger.sideMouseButtonTrigger {
             middleClickTrigger.start()
@@ -334,6 +350,22 @@ final class SizedManager: ObservableObject {
     private var isLoopStale: Bool {
         guard let loopStartedAt else { return false }
         return Date().timeIntervalSince(loopStartedAt) > staleLoopTimeout
+    }
+
+    /// Stops the wheel from intercepting anything without quitting the app. Deliberately not
+    /// persisted: a pause left on by accident should not survive a relaunch as a dead trigger.
+    private(set) var isPaused = false
+
+    func setPaused(_ paused: Bool) {
+        guard isPaused != paused else { return }
+        isPaused = paused
+
+        if paused {
+            forceResetInteraction(reason: "paused from the menu bar")
+            stopEventTriggers()
+        } else {
+            startEventTriggers()
+        }
     }
 
     private var staleLoopTimeout: TimeInterval {

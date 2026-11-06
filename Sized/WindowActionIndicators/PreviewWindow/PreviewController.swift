@@ -11,7 +11,7 @@ final class PreviewController {
     private var screenFrame: CGRect?
     private var settings: SettingsStore { .shared }
 
-    func show(frame: CGRect, style: WindowActionPreviewStyle = .standard) {
+    func show(frame: CGRect, style: WindowActionPreviewStyle = .standard, animated: Bool = true) {
         guard settings.behavior.showPreview else {
             hide()
             return
@@ -55,9 +55,33 @@ final class PreviewController {
         panel.orderFrontRegardless()
         panel.contentView?.layoutSubtreeIfNeeded()
 
-        withAnimation(previewAnimation) {
-            presentation.frame = target
-            presentation.isShown = true
+        if animated {
+            withAnimation(previewAnimation) {
+                presentation.frame = target
+                presentation.isShown = true
+            }
+        } else {
+            withoutAnimation {
+                presentation.frame = target
+                presentation.isShown = true
+            }
+        }
+    }
+
+    /// Moves the lingering box onto the frame the window actually reached, then dissolves it.
+    /// A window can refuse the size it was asked for, and this is when the preview would
+    /// otherwise keep describing a place the window is not.
+    func settle(frame: CGRect, delay: TimeInterval = 0.12) {
+        guard presentation.isShown else { return }
+        show(frame: frame, animated: false)
+        closeTask?.cancel()
+        closeTask = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(for: .seconds(delay))
+            } catch {
+                return
+            }
+            self?.hide()
         }
     }
 

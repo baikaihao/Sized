@@ -1,13 +1,16 @@
 import AppKit
 
 @MainActor
-final class StatusItemController {
+final class StatusItemController: NSObject {
     static let shared = StatusItemController()
 
     private var statusItem: NSStatusItem?
+    private var pauseItem: NSMenuItem?
     private var openSized: (() -> Void)?
 
-    private init() {}
+    private override init() {
+        super.init()
+    }
 
     func configure(openSized: @escaping () -> Void) {
         self.openSized = openSized
@@ -40,14 +43,21 @@ final class StatusItemController {
             action: #selector(openSettings),
             keyEquivalent: ""
         )
+        let pauseItem = NSMenuItem(
+            title: "暂停轮盘".localized,
+            action: #selector(togglePause),
+            keyEquivalent: ""
+        )
         let quitItem = NSMenuItem(
             title: "退出 Sized".localized,
             action: #selector(quitApp),
             keyEquivalent: "q"
         )
 
-        [openItem, quitItem].forEach { $0.target = self }
-        menu.items = [openItem, quitItem]
+        [openItem, pauseItem, quitItem].forEach { $0.target = self }
+        self.pauseItem = pauseItem
+        menu.items = [openItem, pauseItem, NSMenuItem.separator(), quitItem]
+        menu.delegate = self
 
         item.menu = menu
         statusItem = item
@@ -57,13 +67,24 @@ final class StatusItemController {
         guard let statusItem else { return }
         NSStatusBar.system.removeStatusItem(statusItem)
         self.statusItem = nil
+        pauseItem = nil
     }
 
     @objc private func openSettings() {
         openSized?()
     }
 
+    @objc private func togglePause() {
+        SizedManager.shared.setPaused(!SizedManager.shared.isPaused)
+    }
+
     @objc private func quitApp() {
         NSApp.terminate(nil)
+    }
+}
+
+extension StatusItemController: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        pauseItem?.state = SizedManager.shared.isPaused ? .on : .off
     }
 }
