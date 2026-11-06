@@ -5,12 +5,37 @@ struct GeneralSettingsPage: View {
     @EnvironmentObject private var settings: SettingsStore
     @ObservedObject private var accessibility = AccessibilityManager.shared
     @ObservedObject private var appIconProvider = AppIconProvider.shared
+    @ObservedObject private var updateChecker = UpdateChecker.shared
     @State private var showingResetConfirmation = false
     @State private var launchAtLoginError: String?
 
     var body: some View {
         SettingsPageContainer {
             appIdentity
+
+            SettingsSection(title: "更新", systemImage: "arrow.triangle.2.circlepath") {
+                HStack {
+                    updateStatus
+
+                    Spacer()
+
+                    if case .available(_, let downloadURL) = updateChecker.state {
+                        Link(destination: downloadURL) {
+                            Label("下载新版本", systemImage: "arrow.down.circle")
+                        }
+                    }
+
+                    Button("检查更新") {
+                        updateChecker.check()
+                    }
+                    .disabled(updateChecker.state == .checking)
+                }
+
+                Toggle("每天自动检查一次", isOn: $settings.general.autoCheckUpdates)
+                    .onChange(of: settings.general.autoCheckUpdates) { _, _ in
+                        UpdateChecker.shared.refreshSchedule()
+                    }
+            }
 
             SettingsSection(title: "通用设置", systemImage: "switch.2") {
                 Toggle("登录时自动启动", isOn: Binding(
@@ -141,6 +166,34 @@ struct GeneralSettingsPage: View {
         .onAppear {
             settings.general.launchAtLogin = LaunchAtLoginManager.shared.isEnabled
             SizedManager.shared.refreshPermissions()
+        }
+    }
+
+    @ViewBuilder
+    private var updateStatus: some View {
+        switch updateChecker.state {
+        case .idle:
+            Label("手动检查 GitHub 上的最新版本", systemImage: "info.circle")
+                .foregroundStyle(.secondary)
+        case .checking:
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("检查中…")
+                    .foregroundStyle(.secondary)
+            }
+        case .upToDate:
+            Label("已是最新版本", systemImage: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+        case .available(let version, _):
+            Label("发现新版本 %@".localizedFormat(version), systemImage: "arrow.down.circle.fill")
+                .foregroundStyle(.orange)
+        case .rateLimited:
+            Label("GitHub 访问太频繁，请稍后再试", systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+        case .failed:
+            Label("检查失败，请稍后重试", systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.red)
         }
     }
 
@@ -561,7 +614,7 @@ private enum MouseButtonFormatter {
     }
 }
 
-private extension Bundle {
+extension Bundle {
     var shortVersion: String {
         object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
     }

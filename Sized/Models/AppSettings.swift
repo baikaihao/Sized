@@ -376,12 +376,39 @@ struct GeneralSettings: Codable, Equatable {
     var launchAtLogin: Bool
     var showMenuBarIcon: Bool
     var hideDockIcon: Bool
+    var autoCheckUpdates: Bool
 
     static let `default` = GeneralSettings(
         launchAtLogin: true,
         showMenuBarIcon: true,
-        hideDockIcon: true
+        hideDockIcon: true,
+        autoCheckUpdates: false
     )
+}
+
+extension GeneralSettings {
+    private enum CodingKeys: String, CodingKey {
+        case launchAtLogin
+        case showMenuBarIcon
+        case hideDockIcon
+        case autoCheckUpdates
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? Self.default.launchAtLogin
+        showMenuBarIcon = try container.decodeIfPresent(Bool.self, forKey: .showMenuBarIcon) ?? Self.default.showMenuBarIcon
+        hideDockIcon = try container.decodeIfPresent(Bool.self, forKey: .hideDockIcon) ?? Self.default.hideDockIcon
+        autoCheckUpdates = try container.decodeIfPresent(Bool.self, forKey: .autoCheckUpdates) ?? Self.default.autoCheckUpdates
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(launchAtLogin, forKey: .launchAtLogin)
+        try container.encode(showMenuBarIcon, forKey: .showMenuBarIcon)
+        try container.encode(hideDockIcon, forKey: .hideDockIcon)
+        try container.encode(autoCheckUpdates, forKey: .autoCheckUpdates)
+    }
 }
 
 struct AssignmentSettings: Codable, Equatable {

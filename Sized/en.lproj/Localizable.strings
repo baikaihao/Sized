@@ -176,3 +176,14 @@
 "恢复" = "Restore";
 "撤销" = "Undo";
 "无" = "None";
+
+"更新" = "Updates";
+"手动检查 GitHub 上的最新版本" = "Manually check GitHub for the latest version";
+"检查中…" = "Checking…";
+"已是最新版本" = "You're on the latest version";
+"发现新版本 %@" = "Version %@ is available";
+"检查失败，请稍后重试" = "Couldn't check for updates. Try again later.";
+"GitHub 访问太频繁，请稍后再试" = "GitHub is limiting requests right now. Try again later.";
+"下载新版本" = "Download";
+"检查更新" = "Check for Updates";
+"每天自动检查一次" = "Check for updates automatically once a day";

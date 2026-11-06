@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppIconProvider.shared.start()
         SizedManager.shared.start()
+        UpdateChecker.shared.refreshSchedule()
     }
 }
 
